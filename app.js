@@ -4,21 +4,31 @@ const lessonFilter = document.getElementById('lesson-filter');
 const searchInput = document.getElementById('search-input');
 const reviewBtn = document.getElementById('review-btn');
 const practiceBtn = document.getElementById('practice-btn');
+const vocabularyBtn = document.getElementById('vocabulary-btn');
 const wordCount = document.getElementById('word-count');
 const resetSrsBtn = document.getElementById('reset-srs-btn');
 
 // Modal elements
 const quizModal = document.getElementById('quiz-modal');
 const reviewModal = document.getElementById('review-modal');
+const vocabularyModal = document.getElementById('vocabulary-modal');
 const quizModalContent = document.getElementById('quiz-modal-content');
 const reviewModalContent = document.getElementById('review-modal-content');
+const vocabularyModalContent = document.getElementById('vocabulary-modal-content');
 
 // Current state
 let currentWords = [];
 let srsData = JSON.parse(localStorage.getItem('srsData')) || {};
+let personalNotes = JSON.parse(localStorage.getItem('personalNotes')) || {};
 let currentReviewIndex = 0;
 let reviewWords = [];
 let isReviewMode = false;
+let currentVocabularyIndex = 0;
+let vocabularyWords = [];
+
+// Speech synthesis setup
+let speechSynthesis = window.speechSynthesis;
+let currentUtterance = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,6 +40,7 @@ function initializeApp() {
     setupEventListeners();
     filterAndDisplayWords();
     updateReviewCount();
+    updateVocabularyStats();
 }
 
 function populateLessonFilter() {
@@ -51,15 +62,26 @@ function setupEventListeners() {
     // Buttons
     reviewBtn.addEventListener('click', startReview);
     practiceBtn.addEventListener('click', openQuizSetup);
+    vocabularyBtn.addEventListener('click', openVocabularyModal);
     resetSrsBtn.addEventListener('click', resetSRS);
     
     // Modal close buttons
     document.getElementById('close-quiz-setup-btn').addEventListener('click', closeQuizModal);
     document.getElementById('quiz-close-btn').addEventListener('click', closeQuizModal);
     document.getElementById('review-close-btn').addEventListener('click', closeReviewModal);
+    document.getElementById('vocabulary-close-btn').addEventListener('click', closeVocabularyModal);
     
     // Quiz setup
     document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
+    
+    // Vocabulary controls
+    document.getElementById('prev-card-btn').addEventListener('click', () => navigateVocabularyCard(-1));
+    document.getElementById('next-card-btn').addEventListener('click', () => navigateVocabularyCard(1));
+    document.getElementById('play-slow-btn').addEventListener('click', () => playAudioWithSpeed(0.6));
+    document.getElementById('play-normal-btn').addEventListener('click', () => playAudioWithSpeed(0.8));
+    document.getElementById('play-fast-btn').addEventListener('click', () => playAudioWithSpeed(1.0));
+    document.getElementById('save-note-btn').addEventListener('click', savePersonalNote);
+    document.getElementById('clear-note-btn').addEventListener('click', clearPersonalNote);
     
     // Click outside modal to close
     quizModal.addEventListener('click', (e) => {
@@ -68,6 +90,10 @@ function setupEventListeners() {
     
     reviewModal.addEventListener('click', (e) => {
         if (e.target === reviewModal) closeReviewModal();
+    });
+    
+    vocabularyModal.addEventListener('click', (e) => {
+        if (e.target === vocabularyModal) closeVocabularyModal();
     });
 }
 
@@ -163,14 +189,150 @@ function getWordsForReview() {
     });
 }
 
-function playAudio(char) {
-    // Simple text-to-speech for Chinese characters
+// Enhanced audio functionality
+function playAudio(char, speed = 0.8) {
     if ('speechSynthesis' in window) {
+        // Stop any current speech
+        if (currentUtterance) {
+            speechSynthesis.cancel();
+        }
+        
         const utterance = new SpeechSynthesisUtterance(char);
         utterance.lang = 'zh-CN';
-        utterance.rate = 0.8;
+        utterance.rate = speed;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        
+        // Try to get a Chinese voice
+        const voices = speechSynthesis.getVoices();
+        const chineseVoice = voices.find(voice => 
+            voice.lang.includes('zh') || voice.lang.includes('cmn')
+        );
+        if (chineseVoice) {
+            utterance.voice = chineseVoice;
+        }
+        
+        currentUtterance = utterance;
         speechSynthesis.speak(utterance);
     }
+}
+
+function playAudioWithSpeed(speed) {
+    if (vocabularyWords[currentVocabularyIndex]) {
+        playAudio(vocabularyWords[currentVocabularyIndex].char, speed);
+    }
+}
+
+// Vocabulary learning functionality
+function openVocabularyModal() {
+    vocabularyWords = [...currentWords];
+    currentVocabularyIndex = 0;
+    
+    if (vocabularyWords.length === 0) {
+        alert('Không có từ nào để học!');
+        return;
+    }
+    
+    showVocabularyModal();
+    displayVocabularyCard();
+    updateVocabularyStats();
+}
+
+function showVocabularyModal() {
+    vocabularyModal.style.display = 'flex';
+    setTimeout(() => {
+        vocabularyModalContent.style.transform = 'scale(1)';
+        vocabularyModalContent.style.opacity = '1';
+    }, 10);
+}
+
+function closeVocabularyModal() {
+    vocabularyModalContent.style.transform = 'scale(0.95)';
+    vocabularyModalContent.style.opacity = '0';
+    setTimeout(() => {
+        vocabularyModal.style.display = 'none';
+    }, 200);
+}
+
+function displayVocabularyCard() {
+    if (currentVocabularyIndex >= vocabularyWords.length) {
+        currentVocabularyIndex = 0;
+    }
+    
+    const word = vocabularyWords[currentVocabularyIndex];
+    const charElement = document.getElementById('flashcard-char');
+    const pinyinElement = document.getElementById('flashcard-pinyin');
+    const meaningElement = document.getElementById('flashcard-meaning');
+    const currentWordDisplay = document.getElementById('current-word-display');
+    const cardCounter = document.getElementById('card-counter');
+    const noteTextarea = document.getElementById('personal-note');
+    
+    charElement.textContent = word.char;
+    pinyinElement.textContent = word.pinyin;
+    meaningElement.textContent = word.meaning;
+    currentWordDisplay.textContent = `${word.char} (${word.pinyin})`;
+    cardCounter.textContent = `${currentVocabularyIndex + 1} / ${vocabularyWords.length}`;
+    
+    // Load personal note
+    const wordId = `${word.char}_${word.lesson}`;
+    noteTextarea.value = personalNotes[wordId] || '';
+}
+
+function navigateVocabularyCard(direction) {
+    currentVocabularyIndex += direction;
+    
+    if (currentVocabularyIndex < 0) {
+        currentVocabularyIndex = vocabularyWords.length - 1;
+    } else if (currentVocabularyIndex >= vocabularyWords.length) {
+        currentVocabularyIndex = 0;
+    }
+    
+    displayVocabularyCard();
+}
+
+function savePersonalNote() {
+    if (vocabularyWords[currentVocabularyIndex]) {
+        const word = vocabularyWords[currentVocabularyIndex];
+        const wordId = `${word.char}_${word.lesson}`;
+        const noteTextarea = document.getElementById('personal-note');
+        
+        personalNotes[wordId] = noteTextarea.value;
+        localStorage.setItem('personalNotes', JSON.stringify(personalNotes));
+        
+        // Show success feedback
+        const saveBtn = document.getElementById('save-note-btn');
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = 'Đã lưu!';
+        saveBtn.classList.add('bg-green-600');
+        setTimeout(() => {
+            saveBtn.textContent = originalText;
+            saveBtn.classList.remove('bg-green-600');
+        }, 1000);
+    }
+}
+
+function clearPersonalNote() {
+    if (vocabularyWords[currentVocabularyIndex]) {
+        const word = vocabularyWords[currentVocabularyIndex];
+        const wordId = `${word.char}_${word.lesson}`;
+        const noteTextarea = document.getElementById('personal-note');
+        
+        delete personalNotes[wordId];
+        localStorage.setItem('personalNotes', JSON.stringify(personalNotes));
+        noteTextarea.value = '';
+    }
+}
+
+function updateVocabularyStats() {
+    const totalWords = vocabData.length;
+    const learnedWords = Object.keys(srsData).length;
+    const reviewWords = getWordsForReview().length;
+    const masteryRate = totalWords > 0 ? Math.round((learnedWords / totalWords) * 100) : 0;
+    
+    document.getElementById('total-words').textContent = totalWords;
+    document.getElementById('learned-words').textContent = learnedWords;
+    document.getElementById('review-words').textContent = reviewWords;
+    document.getElementById('mastery-rate').textContent = `${masteryRate}%`;
 }
 
 // Review functionality
@@ -372,6 +534,7 @@ function runQuiz(words, type) {
         const hint = document.getElementById('quiz-question-hint');
         const options = document.getElementById('quiz-options');
         const feedback = document.getElementById('quiz-feedback');
+        const replayAudioBtn = document.getElementById('quiz-replay-audio-btn');
         
         progress.textContent = `${currentQuestion + 1} / ${words.length}`;
         feedback.innerHTML = '';
@@ -385,24 +548,55 @@ function runQuiz(words, type) {
                 hint.textContent = 'Chọn nghĩa đúng';
                 correctAnswer = word.meaning;
                 allOptions = generateOptions(word, 'meaning');
+                replayAudioBtn.classList.add('hidden');
                 break;
             case 'pinyin-to-meaning':
                 questionText = word.pinyin;
                 hint.textContent = 'Chọn nghĩa đúng';
                 correctAnswer = word.meaning;
                 allOptions = generateOptions(word, 'meaning');
+                replayAudioBtn.classList.add('hidden');
                 break;
             case 'meaning-to-char':
                 questionText = word.meaning;
                 hint.textContent = 'Chọn chữ Hán đúng';
                 correctAnswer = word.char;
                 allOptions = generateOptions(word, 'char');
+                replayAudioBtn.classList.add('hidden');
                 break;
             case 'char-to-pinyin':
                 questionText = word.char;
                 hint.textContent = 'Chọn pinyin đúng';
                 correctAnswer = word.pinyin;
                 allOptions = generateOptions(word, 'pinyin');
+                replayAudioBtn.classList.add('hidden');
+                break;
+            case 'audio-to-meaning':
+                questionText = '🔊 Nhấn để nghe';
+                hint.textContent = 'Nghe và chọn nghĩa đúng';
+                correctAnswer = word.meaning;
+                allOptions = generateOptions(word, 'meaning');
+                replayAudioBtn.classList.remove('hidden');
+                replayAudioBtn.onclick = () => playAudio(word.char);
+                // Auto-play audio
+                setTimeout(() => playAudio(word.char), 500);
+                break;
+            case 'listening-comprehension':
+                questionText = '🔊 Nghe hiểu';
+                hint.textContent = 'Nghe câu và chọn từ phù hợp';
+                correctAnswer = word.char;
+                allOptions = generateOptions(word, 'char');
+                replayAudioBtn.classList.remove('hidden');
+                replayAudioBtn.onclick = () => playAudio(word.char);
+                // Auto-play audio
+                setTimeout(() => playAudio(word.char), 500);
+                break;
+            case 'reading-comprehension':
+                questionText = `Đọc câu: "这是${word.char}。"`;
+                hint.textContent = 'Chọn nghĩa phù hợp với từ trong câu';
+                correctAnswer = word.meaning;
+                allOptions = generateOptions(word, 'meaning');
+                replayAudioBtn.classList.add('hidden');
                 break;
         }
         
@@ -489,8 +683,11 @@ function showQuizResults(score, total, wrongAnswers) {
 function resetSRS() {
     if (confirm('Bạn có chắc muốn reset toàn bộ tiến độ ôn tập?')) {
         localStorage.removeItem('srsData');
+        localStorage.removeItem('personalNotes');
         srsData = {};
+        personalNotes = {};
         updateReviewCount();
+        updateVocabularyStats();
         alert('Đã reset thành công!');
     }
 }
