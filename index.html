@@ -72,6 +72,10 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v1.946l4.061 4.061a1 1 0 01-1.414 1.414l-4.5-4.5a1 1 0 011.653-1.653zM4.646 4.646a1 1 0 011.414 0L10 8.586l3.94-3.94a1 1 0 111.414 1.414L11.414 10l3.94 3.94a1 1 0 11-1.414 1.414L10 11.414l-3.94 3.94a1 1 0 01-1.414-1.414L8.586 10 4.646 6.06a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         Luyện tập
                     </button>
+                    <button id="daily-test-btn" class="flex-1 w-full bg-purple-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
+                        Kiểm tra hàng ngày
+                    </button>
                 </div>
             </div>
              <p id="word-count" class="text-center text-slate-500 mt-4 text-sm"></p>
@@ -98,6 +102,8 @@
                         <option value="char-to-meaning">Chữ Hán → Nghĩa</option>
                         <option value="pinyin-to-meaning">Pinyin → Nghĩa</option>
                         <option value="meaning-to-char">Nghĩa → Chữ Hán</option>
+                        <option value="listen-to-meaning">Nghe → Nghĩa</option>
+                        <option value="daily-test">Kiểm tra hàng ngày (TOCFL A1)</option>
                     </select>
                 </div>
                  <div class="mb-6">
@@ -105,6 +111,7 @@
                     <select id="quiz-source" class="w-full p-3 bg-white border border-slate-300 rounded-lg">
                         <option value="current">Từ đang lọc</option>
                         <option value="all">Tất cả từ vựng</option>
+                        <option value="need-review">Từ cần ôn lại</option>
                     </select>
                 </div>
                 <div class="flex justify-end gap-4">
@@ -153,9 +160,32 @@
                  <div class="flashcard h-full">
                     <div class="flashcard-inner">
                         <div id="review-card-front" class="flashcard-front bg-slate-100 shadow-md"></div>
-                        <div id="review-card-back" class="flashcard-back bg-blue-600 text-white shadow-md"></div>
+                        <div id="review-card-back" class="flashcard-back bg-blue-600 text-white shadow-lg relative">
+                            <p class="text-lg font-medium">${word.pinyin}</p>
+                            <p class="mt-1 text-center">${word.meaning}</p>
+                            <button class="speak-btn" data-text="${word.char}">🔊</button>
+                            <button class="note-btn" data-char="${word.char}" style="position: absolute; bottom: 8px; left: 8px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: background 0.2s;">📝</button>
+                            <p class="note-text" style="font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">${notes[word.char] || ''}</p>
+                        </div>
                     </div>
                  </div>
+             </div>
+             <div id="speech-settings" class="mt-4 p-4 bg-slate-50 rounded-lg">
+                <h3 class="text-lg font-semibold mb-2">Cài đặt phát âm</h3>
+                <div class="mb-2">
+                    <label for="speech-rate" class="block text-sm font-medium text-slate-700 mb-1">Tốc độ phát âm:</label>
+                    <select id="speech-rate" class="w-full p-2 bg-white border border-slate-300 rounded-lg" onchange="updateSpeechSettings()">
+                        <option value="0.7">Chậm</option>
+                        <option value="0.9" selected> Bình thường</option>
+                        <option value="1.1">Nhanh</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="flex items-center text-sm font-medium text-slate-700">
+                        <input type="checkbox" id="auto-play" class="mr-2" onchange="updateSpeechSettings()">
+                        Phát âm tự động khi lật thẻ
+                    </label>
+                </div>
              </div>
              <div id="review-difficulty-buttons" class="mt-6 flex justify-around hidden">
                  <button data-difficulty="1" class="btn-difficulty border-2 border-transparent w-1/3 py-3 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition">Khó</button>
@@ -208,6 +238,56 @@
             const reviewCardContainer = document.getElementById('review-card-container');
             const reviewDifficultyButtons = document.getElementById('review-difficulty-buttons');
 
+            let speechRate = 0.9;
+            let autoPlayOnFlip = false;
+            let notes = JSON.parse(localStorage.getItem('vocabNotes')) || {};
+            let progress = JSON.parse(localStorage.getItem('vocabProgress')) || {};
+
+            function updateSpeechSettings() {
+                speechRate = parseFloat(document.getElementById('speech-rate').value);
+                autoPlayOnFlip = document.getElementById('auto-play').checked;
+            }
+
+            function saveNotes() {
+                localStorage.setItem('vocabNotes', JSON.stringify(notes));
+            }
+
+            function saveProgress() {
+                localStorage.setItem('vocabProgress', JSON.stringify(progress));
+            }
+
+            function updateWordProgress(char, status, difficulty) {
+                if (!progress[char]) {
+                    progress[char] = { status: status, lastReviewed: new Date().toISOString(), interval: 0, difficulty: difficulty };
+                } else {
+                    progress[char].status = status;
+                    progress[char].lastReviewed = new Date().toISOString();
+                    progress[char].difficulty = difficulty;
+                    if (status === 'known') {
+                        progress[char].interval = calculateInterval(progress[char].interval, difficulty);
+                    } else {
+                        progress[char].interval = 0;
+                    }
+                }
+                saveProgress();
+            }
+
+            function calculateInterval(currentInterval, difficulty) {
+                const baseIntervals = { '1': 1, '2': 3, '3': 6 };
+                const multiplier = difficulty === '1' ? 0.5 : difficulty === '2' ? 1 : 1.5;
+                return currentInterval === 0 ? baseIntervals[difficulty] : Math.round(currentInterval * multiplier);
+            }
+
+            function getWordsToReview() {
+                const now = new Date();
+                return Object.keys(progress).filter(char => {
+                    const wordProgress = progress[char];
+                    const lastReviewed = new Date(wordProgress.lastReviewed);
+                    const daysSinceReview = (now - lastReviewed) / (1000 * 60 * 60 * 24);
+                    return daysSinceReview >= wordProgress.interval && wordProgress.status !== 'mastered';
+                });
+            }
+
             // Populate lesson filter
             const lessons = [...new Set(vocabData.map(item => item.lesson))];
             lessons.sort((a, b) => a - b).forEach(lesson => {
@@ -222,7 +302,7 @@
                     window.speechSynthesis.cancel();
                     const utterance = new SpeechSynthesisUtterance(text);
                     utterance.lang = 'zh-CN';
-                    utterance.rate = 0.9;
+                    utterance.rate = speechRate;
                     window.speechSynthesis.speak(utterance);
                 } else {
                     alert('Trình duyệt của bạn không hỗ trợ chức năng phát âm.');
@@ -250,7 +330,11 @@
 
                     const front = document.createElement('div');
                     front.className = 'flashcard-front bg-white shadow-lg border border-slate-200';
-                    front.innerHTML = `<span class="text-3xl font-semibold text-slate-800 text-center">${word.char}</span>`;
+                    let statusIndicator = '';
+                    if (progress[word.char]) {
+                        statusIndicator = progress[word.char].status === 'known' ? '✅' : progress[word.char].status === 'learning' ? '📚' : '❌';
+                    }
+                    front.innerHTML = `<span class="text-3xl font-semibold text-slate-800 text-center">${word.char} ${statusIndicator}</span>`;
 
                     const back = document.createElement('div');
                     back.className = 'flashcard-back bg-blue-600 text-white shadow-lg relative';
@@ -258,6 +342,8 @@
                         <p class="text-lg font-medium">${word.pinyin}</p>
                         <p class="mt-1 text-center">${word.meaning}</p>
                         <button class="speak-btn" data-text="${word.char}">🔊</button>
+                        <button class="note-btn" data-char="${word.char}" style="position: absolute; bottom: 8px; left: 8px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: background 0.2s;">📝</button>
+                        <p class="note-text" style="font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">${notes[word.char] || ''}</p>
                     `;
                     
                     inner.appendChild(front);
@@ -273,6 +359,18 @@
                     e.stopPropagation();
                     const textToSpeak = e.target.getAttribute('data-text');
                     speak(textToSpeak);
+                } else if (e.target.classList.contains('note-btn')) {
+                    e.stopPropagation();
+                    const char = e.target.getAttribute('data-char');
+                    const note = prompt('Nhập ghi chú cho từ ' + char + ':', notes[char] || '');
+                    if (note !== null) {
+                        notes[char] = note;
+                        saveNotes();
+                        const card = e.target.closest('.flashcard');
+                        const noteTextEl = card.querySelector('.note-text');
+                        noteTextEl.textContent = note;
+                        noteTextEl.style.display = note ? 'block' : 'none';
+                    }
                 }
             });
 
@@ -318,16 +416,34 @@
             }
             
             function setupQuiz() {
+                const quizType = document.getElementById('quiz-type').value;
                 const quizSource = document.getElementById('quiz-source').value;
-                let sourceData = (quizSource === 'current') ? getFilteredData() : vocabData;
+                let sourceData;
+
+                if (quizSource === 'current') {
+                    sourceData = getFilteredData();
+                } else if (quizSource === 'need-review') {
+                    const wordsToReview = getWordsToReview();
+                    sourceData = vocabData.filter(word => wordsToReview.includes(word.char));
+                    if (sourceData.length < 4) {
+                        sourceData = vocabData;
+                        alert('Không đủ từ cần ôn lại. Sử dụng tất cả từ vựng để kiểm tra.');
+                    }
+                } else {
+                    sourceData = vocabData;
+                }
 
                 if (sourceData.length < 4) {
                     alert('Cần ít nhất 4 từ trong danh sách đã chọn để tạo bài kiểm tra.');
                     return;
                 }
 
-                currentQuiz.settings.type = document.getElementById('quiz-type').value;
-                currentQuiz.questions = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 10);
+                currentQuiz.settings.type = quizType;
+                if (quizType === 'daily-test') {
+                    currentQuiz.questions = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 20);
+                } else {
+                    currentQuiz.questions = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 10);
+                }
                 currentQuiz.currentQuestionIndex = 0;
                 currentQuiz.score = 0;
                 currentQuiz.wrongAnswers = [];
@@ -367,6 +483,38 @@
                     questionHint = `(Gợi ý: ${currentWord.char})`;
                     answerKey = 'meaning';
                     optionKey = 'meaning';
+                } else if (currentQuiz.settings.type === 'listen-to-meaning') {
+                    questionText = 'Nghe và chọn nghĩa đúng';
+                    questionHint = '';
+                    answerKey = 'meaning';
+                    optionKey = 'meaning';
+                    speak(currentWord.char);
+                } else if (currentQuiz.settings.type === 'daily-test') {
+                    const types = ['char-to-meaning', 'pinyin-to-meaning', 'listen-to-meaning', 'meaning-to-char'];
+                    const randomType = types[Math.floor(Math.random() * types.length)];
+                    if (randomType === 'char-to-meaning') {
+                        questionText = currentWord.char;
+                        questionHint = currentWord.pinyin;
+                        answerKey = 'meaning';
+                        optionKey = 'meaning';
+                    } else if (randomType === 'pinyin-to-meaning') {
+                        questionText = currentWord.pinyin;
+                        questionHint = `(Gợi ý: ${currentWord.char})`;
+                        answerKey = 'meaning';
+                        optionKey = 'meaning';
+                    } else if (randomType === 'listen-to-meaning') {
+                        questionText = 'Nghe và chọn nghĩa đúng';
+                        questionHint = '';
+                        answerKey = 'meaning';
+                        optionKey = 'meaning';
+                        speak(currentWord.char);
+                    } else {
+                        questionText = currentWord.meaning;
+                        questionHint = `(Pinyin: ${currentWord.pinyin})`;
+                        answerKey = 'char';
+                        optionKey = 'char';
+                    }
+                    currentQuiz.settings.currentType = randomType;
                 } else { // meaning-to-char
                     questionText = currentWord.meaning;
                     questionHint = `(Pinyin: ${currentWord.pinyin})`;
@@ -460,11 +608,16 @@
             
             reviewBtn.addEventListener('click', () => {
                 let sourceData = getFilteredData();
-                if (sourceData.length === 0) {
-                    alert('Hãy chọn một bộ từ để ôn tập.');
+                const wordsToReview = getWordsToReview();
+                if (sourceData.length === 0 && wordsToReview.length === 0) {
+                    alert('Hãy chọn một bộ từ để ôn tập hoặc kiểm tra các từ cần ôn lại.');
                     return;
                 }
-                reviewSession.queue = [...sourceData].sort(() => 0.5 - Math.random());
+                if (wordsToReview.length > 0) {
+                    reviewSession.queue = vocabData.filter(word => wordsToReview.includes(word.char));
+                } else {
+                    reviewSession.queue = [...sourceData].sort(() => 0.5 - Math.random());
+                }
                 startReviewSession();
             });
 
@@ -498,19 +651,16 @@
             reviewCardContainer.addEventListener('click', () => {
                 reviewCardContainer.querySelector('.flashcard').classList.add('is-flipped');
                 reviewDifficultyButtons.classList.remove('hidden');
+                if (autoPlayOnFlip && reviewSession.currentWord) {
+                    speak(reviewSession.currentWord.char);
+                }
             });
             
             reviewDifficultyButtons.addEventListener('click', (e) => {
                 if(e.target.matches('.btn-difficulty')) {
                     const difficulty = parseInt(e.target.dataset.difficulty);
-                    // Difficulty 1 ("Khó"): Add word back near the front of the queue
-                    if (difficulty === 1) { 
-                        // Insert after the next item to avoid immediate repetition
-                        reviewSession.queue.splice(1, 0, reviewSession.currentWord);
-                    } else if (difficulty === 2) { // Difficulty 2 ("Vừa"): Add to the middle
-                        reviewSession.queue.splice(Math.floor(reviewSession.queue.length / 2), 0, reviewSession.currentWord);
-                    }
-                    // Difficulty 3 ("Dễ"): Word is not added back, effectively marking it as "known" for this session.
+                    const status = difficulty === 3 ? 'known' : difficulty === 2 ? 'learning' : 'unknown';
+                    updateWordProgress(reviewSession.currentWord.char, status, difficulty.toString());
                     nextReviewWord();
                 }
             });
@@ -521,6 +671,14 @@
             lessonFilter.addEventListener('change', filterAndRender);
             searchInput.addEventListener('input', filterAndRender);
             filterAndRender();
+
+            const dailyTestBtn = document.getElementById('daily-test-btn');
+
+            dailyTestBtn.addEventListener('click', () => {
+                document.getElementById('quiz-type').value = 'daily-test';
+                document.getElementById('quiz-source').value = 'need-review';
+                showModal(quizModal, quizModalContent);
+            });
         });
     </script>
 </body>
