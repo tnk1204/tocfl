@@ -38,25 +38,164 @@
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Dark mode styles */
+        .dark body { background-color: #0f172a; color: #e2e8f0; }
+        .dark .bg-slate-50 { background-color: #0f172a; }
+        .dark .bg-white { background-color: #1e293b; }
+        .dark .text-slate-800 { color: #e2e8f0; }
+        .dark .text-slate-600 { color: #94a3b8; }
+        .dark .text-slate-500 { color: #64748b; }
+        .dark .border-slate-300 { border-color: #475569; }
+        .dark .bg-slate-100 { background-color: #334155; }
+        .dark .bg-slate-200 { background-color: #475569; }
+        
+        /* Animation classes */
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* Progress bar */
+        .progress-bar { background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899); }
+        
+        /* Loading spinner */
+        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 transition-colors duration-200">
 
     <div class="container mx-auto p-4 md:p-8">
+        <!-- Header with dark mode toggle -->
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Công cụ Ôn tập Từ vựng TOCFL A1</h1>
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-4">
+                    <button id="stats-btn" class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition" title="Thống kê học tập">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </button>
+                    <button id="export-btn" class="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition" title="Xuất dữ liệu">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </button>
+                    <button id="speech-settings-btn" class="p-2 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200 transition" title="Cài đặt phát âm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.465a5 5 0 001.06-7.072m-2.829 9.9a9 9 0 010-12.728" />
+                        </svg>
+                    </button>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Công cụ Ôn tập Từ vựng TOCFL A1</h1>
+                <button id="dark-mode-toggle" class="p-2 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition" title="Chế độ tối">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
             <p class="text-slate-600 mt-2">Sách "A Course in Contemporary Chinese" - Bài 1 đến 15</p>
+            
+            <!-- Study streak display -->
+            <div id="streak-display" class="mt-4 inline-flex items-center gap-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full">
+                <span class="text-lg">🔥</span>
+                <span id="streak-count" class="font-semibold">0</span>
+                <span>ngày liên tiếp</span>
+            </div>
         </header>
+
+        <!-- Global Speech Settings Panel -->
+        <div id="speech-settings-panel" class="hidden mb-8 bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Cài đặt phát âm</h2>
+                <button id="close-speech-settings-btn" class="text-slate-500 hover:text-slate-700 text-2xl">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="global-speech-rate" class="block text-sm font-medium text-slate-700 mb-2">Tốc độ phát âm:</label>
+                    <select id="global-speech-rate" class="w-full p-3 bg-white border border-slate-300 rounded-lg">
+                        <option value="0.5">Rất chậm</option>
+                        <option value="0.7">Chậm</option>
+                        <option value="0.9" selected>Bình thường</option>
+                        <option value="1.1">Nhanh</option>
+                        <option value="1.3">Rất nhanh</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Tự động phát âm:</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="global-auto-play" class="mr-2">
+                            <span>Tự động phát âm khi lật thẻ</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="auto-play-on-reveal" class="mr-2">
+                            <span>Tự động phát âm khi hiển thị câu hỏi</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Kiểm tra phát âm:</label>
+                    <div class="flex items-center gap-4">
+                        <input type="text" id="test-speech-text" placeholder="Nhập chữ Hán để kiểm tra..." class="flex-grow p-3 bg-white border border-slate-300 rounded-lg">
+                        <button id="test-speech-btn" class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Phát âm</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <button id="save-speech-settings-btn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Lưu cài đặt</button>
+            </div>
+        </div>
+
+        <!-- Statistics Dashboard -->
+        <div id="stats-dashboard" class="hidden mb-8 bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Thống kê học tập</h2>
+                <button id="close-stats-btn" class="text-slate-500 hover:text-slate-700 text-2xl">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-800">Tổng từ vựng</h3>
+                    <p id="total-words" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-green-800">Đã học</h3>
+                    <p id="learned-words" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-yellow-800">Đang học</h3>
+                    <p id="learning-words" class="text-2xl font-bold text-yellow-600">0</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-red-800">Chưa học</h3>
+                    <p id="unknown-words" class="text-2xl font-bold text-red-600">0</p>
+                </div>
+            </div>
+            <div class="mt-6">
+                <h3 class="font-semibold mb-2">Tiến độ theo bài học</h3>
+                <div id="lesson-progress" class="space-y-2"></div>
+            </div>
+        </div>
 
         <div class="sticky top-0 bg-slate-50/80 backdrop-blur-sm z-10 py-4 mb-6">
             <div class="flex flex-col md:flex-row gap-4 max-w-5xl mx-auto items-end">
-                <div class="flex-grow w-full md:w-1/3">
-                    <label for="lesson-filter" class="block text-sm font-medium text-slate-700 mb-1">Lọc</label>
+                <div class="flex-grow w-full md:w-1/4">
+                    <label for="lesson-filter" class="block text-sm font-medium text-slate-700 mb-1">Lọc bài học</label>
                     <select id="lesson-filter" class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                         <option value="all">Tất cả bài học</option>
+                    </select>
+                </div>
+                <div class="flex-grow w-full md:w-1/4">
+                    <label for="status-filter" class="block text-sm font-medium text-slate-700 mb-1">Trạng thái</label>
+                    <select id="status-filter" class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="all">Tất cả</option>
+                        <option value="unknown">Chưa học</option>
+                        <option value="learning">Đang học</option>
+                        <option value="known">Đã học</option>
+                        <option value="need-review">Cần ôn lại</option>
                     </select>
                 </div>
                 <div class="flex-grow w-full md:w-1/3">
@@ -81,12 +220,12 @@
              <p id="word-count" class="text-center text-slate-500 mt-4 text-sm"></p>
         </div>
 
-        <main id="vocab-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+        <main id="vocab-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
             <!-- Vocabulary cards will be rendered here by JavaScript -->
         </main>
         
         <footer class="text-center mt-12 text-slate-500 text-sm">
-            <p>Nhấn vào thẻ để lật. Nhấn 🔊 để nghe phát âm.</p>
+            <p>Nhấn vào thẻ để lật. Nhấn 🔊 để nghe phát âm. Sử dụng phím tắt: R (Ôn tập), P (Luyện tập), D (Kiểm tra hàng ngày)</p>
         </footer>
     </div>
     
@@ -195,6 +334,48 @@
         </div>
     </div>
 
+    <!-- Export/Import Modal -->
+    <div id="export-modal" class="modal-base fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 md:p-8 w-11/12 max-w-md transform transition-all scale-95 opacity-0" id="export-modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Xuất/Nhập dữ liệu</h2>
+                <button id="close-export-btn" class="text-slate-500 hover:text-slate-700 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold mb-2">Xuất dữ liệu</h3>
+                    <p class="text-sm text-slate-600 mb-3">Tải xuống tiến độ học tập và ghi chú của bạn</p>
+                    <button id="download-data-btn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition">Tải xuống</button>
+                </div>
+                <div class="border-t pt-4">
+                    <h3 class="font-semibold mb-2">Nhập dữ liệu</h3>
+                    <p class="text-sm text-slate-600 mb-3">Tải lên file dữ liệu đã xuất trước đó</p>
+                    <input type="file" id="import-file" accept=".json" class="hidden">
+                    <button id="import-data-btn" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition">Chọn file</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Example Sentences Modal -->
+    <div id="example-modal" class="modal-base fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 md:p-8 w-11/12 max-w-lg transform transition-all scale-95 opacity-0" id="example-modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Ví dụ mẫu câu</h2>
+                <button id="close-example-btn" class="text-slate-500 hover:text-slate-700 text-2xl">&times;</button>
+            </div>
+            <div id="example-character" class="text-center mb-6">
+                <span class="text-5xl font-bold block mb-1"></span>
+                <span class="text-xl text-slate-600 block pinyin"></span>
+                <span class="text-lg text-slate-700 block meaning"></span>
+            </div>
+            <div id="example-sentences" class="space-y-4 max-h-80 overflow-y-auto"></div>
+            <div class="mt-6 text-center">
+                <button id="close-example-modal-btn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPT LOADING -->
     <!-- Load vocabulary data first -->
     <script src="vocabulary.js"></script>
@@ -215,11 +396,15 @@
             
             const grid = document.getElementById('vocab-grid');
             const lessonFilter = document.getElementById('lesson-filter');
+            const statusFilter = document.getElementById('status-filter');
             const searchInput = document.getElementById('search-input');
             const wordCountEl = document.getElementById('word-count');
             
             const practiceBtn = document.getElementById('practice-btn');
             const reviewBtn = document.getElementById('review-btn');
+            const statsBtn = document.getElementById('stats-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
             
             const quizModal = document.getElementById('quiz-modal');
             const quizModalContent = document.getElementById('quiz-modal-content');
@@ -238,22 +423,129 @@
             const reviewCardContainer = document.getElementById('review-card-container');
             const reviewDifficultyButtons = document.getElementById('review-difficulty-buttons');
 
+            const statsDashboard = document.getElementById('stats-dashboard');
+            const closeStatsBtn = document.getElementById('close-stats-btn');
+            const exportModal = document.getElementById('export-modal');
+            const exportModalContent = document.getElementById('export-modal-content');
+            const closeExportBtn = document.getElementById('close-export-btn');
+            const downloadDataBtn = document.getElementById('download-data-btn');
+            const importDataBtn = document.getElementById('import-data-btn');
+            const importFile = document.getElementById('import-file');
+
             let speechRate = 0.9;
             let autoPlayOnFlip = false;
             let notes = JSON.parse(localStorage.getItem('vocabNotes')) || {};
             let progress = JSON.parse(localStorage.getItem('vocabProgress')) || {};
+            let studyStreak = JSON.parse(localStorage.getItem('studyStreak')) || { count: 0, lastStudyDate: null };
+            let isDarkMode = localStorage.getItem('darkMode') === 'true';
 
+            // Initialize dark mode
+            if (isDarkMode) {
+                document.body.classList.add('dark');
+                darkModeToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>';
+            }
+
+            // Global speech settings
+            const speechSettingsBtn = document.getElementById('speech-settings-btn');
+            const speechSettingsPanel = document.getElementById('speech-settings-panel');
+            const closeSpeechSettingsBtn = document.getElementById('close-speech-settings-btn');
+            const globalSpeechRate = document.getElementById('global-speech-rate');
+            const globalAutoPlay = document.getElementById('global-auto-play');
+            const autoPlayOnReveal = document.getElementById('auto-play-on-reveal');
+            const testSpeechText = document.getElementById('test-speech-text');
+            const testSpeechBtn = document.getElementById('test-speech-btn');
+            const saveSpeechSettingsBtn = document.getElementById('save-speech-settings-btn');
+
+            // Load speech settings from localStorage
+            function loadSpeechSettings() {
+                const settings = JSON.parse(localStorage.getItem('speechSettings')) || {
+                    rate: 0.9,
+                    autoPlay: false,
+                    autoPlayOnReveal: false
+                };
+                
+                speechRate = settings.rate;
+                autoPlayOnFlip = settings.autoPlay;
+                
+                // Update UI to reflect current settings
+                globalSpeechRate.value = settings.rate;
+                globalAutoPlay.checked = settings.autoPlay;
+                autoPlayOnReveal.checked = settings.autoPlayOnReveal;
+                
+                // Also update the review modal settings
+                if (document.getElementById('speech-rate')) {
+                    document.getElementById('speech-rate').value = settings.rate;
+                }
+                if (document.getElementById('auto-play')) {
+                    document.getElementById('auto-play').checked = settings.autoPlay;
+                }
+            }
+
+            // Save speech settings to localStorage
+            function saveSpeechSettings() {
+                const settings = {
+                    rate: parseFloat(globalSpeechRate.value),
+                    autoPlay: globalAutoPlay.checked,
+                    autoPlayOnReveal: autoPlayOnReveal.checked
+                };
+                
+                localStorage.setItem('speechSettings', JSON.stringify(settings));
+                
+                // Update current session
+                speechRate = settings.rate;
+                autoPlayOnFlip = settings.autoPlay;
+                
+                // Also update the review modal settings
+                if (document.getElementById('speech-rate')) {
+                    document.getElementById('speech-rate').value = settings.rate;
+                }
+                if (document.getElementById('auto-play')) {
+                    document.getElementById('auto-play').checked = settings.autoPlay;
+                }
+                
+                // Show success message
+                alert('Cài đặt phát âm đã được lưu!');
+            }
+
+            // Event listeners for speech settings
+            speechSettingsBtn.addEventListener('click', () => {
+                loadSpeechSettings();
+                speechSettingsPanel.classList.remove('hidden');
+                speechSettingsPanel.classList.add('slide-up');
+            });
+
+            closeSpeechSettingsBtn.addEventListener('click', () => {
+                speechSettingsPanel.classList.add('hidden');
+                speechSettingsPanel.classList.remove('slide-up');
+            });
+
+            saveSpeechSettingsBtn.addEventListener('click', saveSpeechSettings);
+
+            testSpeechBtn.addEventListener('click', () => {
+                const text = testSpeechText.value.trim();
+                if (text) {
+                    speak(text);
+                } else {
+                    alert('Vui lòng nhập chữ Hán để kiểm tra phát âm.');
+                }
+            });
+
+            // Update the updateSpeechSettings function to use the global settings
             function updateSpeechSettings() {
-                speechRate = parseFloat(document.getElementById('speech-rate').value);
-                autoPlayOnFlip = document.getElementById('auto-play').checked;
-            }
-
-            function saveNotes() {
-                localStorage.setItem('vocabNotes', JSON.stringify(notes));
-            }
-
-            function saveProgress() {
-                localStorage.setItem('vocabProgress', JSON.stringify(progress));
+                const settings = JSON.parse(localStorage.getItem('speechSettings')) || {
+                    rate: 0.9,
+                    autoPlay: false,
+                    autoPlayOnReveal: false
+                };
+                
+                // Get values from current UI if available, otherwise use stored settings
+                speechRate = document.getElementById('speech-rate') ? 
+                    parseFloat(document.getElementById('speech-rate').value) : 
+                    settings.rate;
+                    
+                autoPlayOnFlip = document.getElementById('auto-play') ? 
+                    document.getElementById('auto-play').checked : 
+                    settings.autoPlay;
             }
 
             function updateWordProgress(char, status, difficulty) {
@@ -270,6 +562,7 @@
                     }
                 }
                 saveProgress();
+                updateStudyStreak();
             }
 
             function calculateInterval(currentInterval, difficulty) {
@@ -286,6 +579,85 @@
                     const daysSinceReview = (now - lastReviewed) / (1000 * 60 * 60 * 24);
                     return daysSinceReview >= wordProgress.interval && wordProgress.status !== 'mastered';
                 });
+            }
+
+            function updateStatistics() {
+                const totalWords = vocabData.length;
+                const learnedWords = Object.values(progress).filter(p => p.status === 'known').length;
+                const learningWords = Object.values(progress).filter(p => p.status === 'learning').length;
+                const unknownWords = totalWords - learnedWords - learningWords;
+
+                document.getElementById('total-words').textContent = totalWords;
+                document.getElementById('learned-words').textContent = learnedWords;
+                document.getElementById('learning-words').textContent = learningWords;
+                document.getElementById('unknown-words').textContent = unknownWords;
+
+                // Update lesson progress
+                const lessonProgressEl = document.getElementById('lesson-progress');
+                lessonProgressEl.innerHTML = '';
+                
+                const lessons = [...new Set(vocabData.map(item => item.lesson))].sort((a, b) => a - b);
+                lessons.forEach(lesson => {
+                    const lessonWords = vocabData.filter(word => word.lesson === lesson);
+                    const lessonProgress = lessonWords.map(word => progress[word.char]?.status || 'unknown');
+                    const learned = lessonProgress.filter(status => status === 'known').length;
+                    const learning = lessonProgress.filter(status => status === 'learning').length;
+                    const percentage = Math.round((learned + learning) / lessonWords.length * 100);
+                    
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'flex items-center gap-2';
+                    progressBar.innerHTML = `
+                        <span class="w-16 text-sm">Bài ${lesson}</span>
+                        <div class="flex-1 bg-slate-200 rounded-full h-2">
+                            <div class="progress-bar h-2 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                        <span class="text-sm w-12">${percentage}%</span>
+                    `;
+                    lessonProgressEl.appendChild(progressBar);
+                });
+            }
+
+            function exportData() {
+                const data = {
+                    notes: notes,
+                    progress: progress,
+                    studyStreak: studyStreak,
+                    exportDate: new Date().toISOString()
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tocfl-progress-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function importData(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.notes) notes = data.notes;
+                        if (data.progress) progress = data.progress;
+                        if (data.studyStreak) studyStreak = data.studyStreak;
+                        
+                        saveNotes();
+                        saveProgress();
+                        saveStudyStreak();
+                        
+                        updateStatistics();
+                        updateStreakDisplay();
+                        filterAndRender();
+                        
+                        alert('Dữ liệu đã được nhập thành công!');
+                    } catch (error) {
+                        alert('Lỗi khi nhập dữ liệu. Vui lòng kiểm tra file.');
+                    }
+                };
+                reader.readAsText(file);
             }
 
             // Populate lesson filter
@@ -322,11 +694,22 @@
 
                 data.forEach(word => {
                     const cardWrapper = document.createElement('div');
-                    cardWrapper.className = 'flashcard h-32';
+                    cardWrapper.className = 'flashcard h-32 fade-in';
                     
                     const inner = document.createElement('div');
                     inner.className = 'flashcard-inner';
-                    inner.addEventListener('click', () => cardWrapper.classList.toggle('is-flipped'));
+                    inner.addEventListener('click', (e) => {
+                        // Check if we're not clicking on buttons inside the card
+                        if (!e.target.classList.contains('speak-btn') && !e.target.classList.contains('example-btn')) {
+                            const wasFlipped = cardWrapper.classList.contains('is-flipped');
+                            cardWrapper.classList.toggle('is-flipped');
+                            
+                            // Auto speak when flipping to back side (if enabled)
+                            if (!wasFlipped && autoPlayOnFlip) {
+                                speak(word.char);
+                            }
+                        }
+                    });
 
                     const front = document.createElement('div');
                     front.className = 'flashcard-front bg-white shadow-lg border border-slate-200';
@@ -340,10 +723,19 @@
                     back.className = 'flashcard-back bg-blue-600 text-white shadow-lg relative';
                     back.innerHTML = `
                         <p class="text-lg font-medium">${word.pinyin}</p>
-                        <p class="mt-1 text-center">${word.meaning}</p>
-                        <button class="speak-btn" data-text="${word.char}">🔊</button>
-                        <button class="note-btn" data-char="${word.char}" style="position: absolute; bottom: 8px; left: 8px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: background 0.2s;">📝</button>
-                        <p class="note-text" style="font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">${notes[word.char] || ''}</p>
+                        <p class="mt-1 mb-8 text-center">${word.meaning}</p>
+                        <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-4">
+                            <button class="speak-btn bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full w-10 h-10 flex items-center justify-center transition-all" data-text="${word.char}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.465a5 5 0 001.06-7.072m-2.829 9.9a9 9 0 010-12.728" />
+                                </svg>
+                            </button>
+                            <button class="example-btn bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full w-10 h-10 flex items-center justify-center transition-all" data-char="${word.char}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                </svg>
+                            </button>
+                        </div>
                     `;
                     
                     inner.appendChild(front);
@@ -355,32 +747,39 @@
             }
             
             grid.addEventListener('click', function(e) {
-                if (e.target.classList.contains('speak-btn')) {
+                if (e.target.classList.contains('speak-btn') || e.target.closest('.speak-btn')) {
                     e.stopPropagation();
-                    const textToSpeak = e.target.getAttribute('data-text');
+                    const button = e.target.classList.contains('speak-btn') ? e.target : e.target.closest('.speak-btn');
+                    const textToSpeak = button.getAttribute('data-text');
                     speak(textToSpeak);
-                } else if (e.target.classList.contains('note-btn')) {
+                } else if (e.target.classList.contains('example-btn') || e.target.closest('.example-btn')) {
                     e.stopPropagation();
-                    const char = e.target.getAttribute('data-char');
-                    const note = prompt('Nhập ghi chú cho từ ' + char + ':', notes[char] || '');
-                    if (note !== null) {
-                        notes[char] = note;
-                        saveNotes();
-                        const card = e.target.closest('.flashcard');
-                        const noteTextEl = card.querySelector('.note-text');
-                        noteTextEl.textContent = note;
-                        noteTextEl.style.display = note ? 'block' : 'none';
-                    }
+                    const button = e.target.classList.contains('example-btn') ? e.target : e.target.closest('.example-btn');
+                    const char = button.getAttribute('data-char');
+                    showExampleSentences(char);
                 }
             });
 
             const getFilteredData = () => {
                  const selectedLesson = lessonFilter.value;
+                 const selectedStatus = statusFilter.value;
                  const searchTerm = searchInput.value.toLowerCase();
                  let filteredData = vocabData;
 
                  if (selectedLesson !== 'all') {
                      filteredData = filteredData.filter(word => word.lesson == selectedLesson);
+                 }
+                
+                 if (selectedStatus !== 'all') {
+                     if (selectedStatus === 'need-review') {
+                         const wordsToReview = getWordsToReview();
+                         filteredData = filteredData.filter(word => wordsToReview.includes(word.char));
+                     } else {
+                         filteredData = filteredData.filter(word => {
+                             const wordProgress = progress[word.char];
+                             return wordProgress ? wordProgress.status === selectedStatus : selectedStatus === 'unknown';
+                         });
+                     }
                  }
                 
                  if (searchTerm) {
@@ -478,6 +877,12 @@
                     questionHint = currentWord.pinyin;
                     answerKey = 'meaning';
                     optionKey = 'meaning';
+                    
+                    // Auto-speak the character if enabled
+                    const settings = JSON.parse(localStorage.getItem('speechSettings')) || {};
+                    if (settings.autoPlayOnReveal) {
+                        setTimeout(() => speak(currentWord.char), 500);
+                    }
                 } else if (currentQuiz.settings.type === 'pinyin-to-meaning') {
                     questionText = currentWord.pinyin;
                     questionHint = `(Gợi ý: ${currentWord.char})`;
@@ -488,7 +893,7 @@
                     questionHint = '';
                     answerKey = 'meaning';
                     optionKey = 'meaning';
-                    speak(currentWord.char);
+                    setTimeout(() => speak(currentWord.char), 500);
                 } else if (currentQuiz.settings.type === 'daily-test') {
                     const types = ['char-to-meaning', 'pinyin-to-meaning', 'listen-to-meaning', 'meaning-to-char'];
                     const randomType = types[Math.floor(Math.random() * types.length)];
@@ -497,6 +902,12 @@
                         questionHint = currentWord.pinyin;
                         answerKey = 'meaning';
                         optionKey = 'meaning';
+                        
+                        // Auto-speak the character if enabled
+                        const settings = JSON.parse(localStorage.getItem('speechSettings')) || {};
+                        if (settings.autoPlayOnReveal) {
+                            setTimeout(() => speak(currentWord.char), 500);
+                        }
                     } else if (randomType === 'pinyin-to-meaning') {
                         questionText = currentWord.pinyin;
                         questionHint = `(Gợi ý: ${currentWord.char})`;
@@ -507,7 +918,7 @@
                         questionHint = '';
                         answerKey = 'meaning';
                         optionKey = 'meaning';
-                        speak(currentWord.char);
+                        setTimeout(() => speak(currentWord.char), 500);
                     } else {
                         questionText = currentWord.meaning;
                         questionHint = `(Pinyin: ${currentWord.pinyin})`;
@@ -607,17 +1018,39 @@
             });
             
             reviewBtn.addEventListener('click', () => {
+                updateSpeechSettings();
                 let sourceData = getFilteredData();
                 const wordsToReview = getWordsToReview();
+                
+                // Check if we have enough words to review
                 if (sourceData.length === 0 && wordsToReview.length === 0) {
                     alert('Hãy chọn một bộ từ để ôn tập hoặc kiểm tra các từ cần ôn lại.');
                     return;
                 }
+                
+                // If we have words that need review, prioritize them
                 if (wordsToReview.length > 0) {
                     reviewSession.queue = vocabData.filter(word => wordsToReview.includes(word.char));
                 } else {
                     reviewSession.queue = [...sourceData].sort(() => 0.5 - Math.random());
                 }
+                
+                // Ensure we have at least 5 words to review
+                const MIN_REVIEW_WORDS = 5;
+                if (reviewSession.queue.length < MIN_REVIEW_WORDS) {
+                    console.log(`Chỉ có ${reviewSession.queue.length} từ để ôn tập, bổ sung thêm từ vựng...`);
+                    
+                    // Add more words from the full vocabulary that aren't already in the queue
+                    const existingChars = new Set(reviewSession.queue.map(word => word.char));
+                    const additionalWords = vocabData
+                        .filter(word => !existingChars.has(word.char))
+                        .sort(() => 0.5 - Math.random())
+                        .slice(0, MIN_REVIEW_WORDS - reviewSession.queue.length);
+                        
+                    reviewSession.queue = [...reviewSession.queue, ...additionalWords];
+                    console.log(`Đã thêm ${additionalWords.length} từ, tổng cộng: ${reviewSession.queue.length} từ`);
+                }
+                
                 startReviewSession();
             });
 
@@ -667,10 +1100,76 @@
 
             reviewCloseBtn.addEventListener('click', () => hideModal(reviewModal, reviewModalContent));
             
+            // Statistics functionality
+            statsBtn.addEventListener('click', () => {
+                updateStatistics();
+                statsDashboard.classList.remove('hidden');
+                statsDashboard.classList.add('slide-up');
+            });
+
+            closeStatsBtn.addEventListener('click', () => {
+                statsDashboard.classList.add('hidden');
+            });
+
+            // Export/Import functionality
+            exportBtn.addEventListener('click', () => showModal(exportModal, exportModalContent));
+            closeExportBtn.addEventListener('click', () => hideModal(exportModal, exportModalContent));
+            downloadDataBtn.addEventListener('click', exportData);
+            importDataBtn.addEventListener('click', () => importFile.click());
+            importFile.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    importData(e.target.files[0]);
+                }
+            });
+
+            // Dark mode toggle
+            darkModeToggle.addEventListener('click', () => {
+                isDarkMode = !isDarkMode;
+                document.body.classList.toggle('dark', isDarkMode);
+                localStorage.setItem('darkMode', isDarkMode);
+                
+                if (isDarkMode) {
+                    darkModeToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>';
+                } else {
+                    darkModeToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>';
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                
+                switch(e.key.toLowerCase()) {
+                    case 'r':
+                        e.preventDefault();
+                        reviewBtn.click();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        practiceBtn.click();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        document.getElementById('daily-test-btn').click();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        statsBtn.click();
+                        break;
+                    case 'escape':
+                        if (statsDashboard.classList.contains('slide-up')) {
+                            closeStatsBtn.click();
+                        }
+                        break;
+                }
+            });
+            
             // Initial Setup
             lessonFilter.addEventListener('change', filterAndRender);
+            statusFilter.addEventListener('change', filterAndRender);
             searchInput.addEventListener('input', filterAndRender);
             filterAndRender();
+            updateStreakDisplay();
 
             const dailyTestBtn = document.getElementById('daily-test-btn');
 
@@ -679,6 +1178,129 @@
                 document.getElementById('quiz-source').value = 'need-review';
                 showModal(quizModal, quizModalContent);
             });
+
+            // Ensure checkbox triggers updateSpeechSettings
+            const autoPlayCheckbox = document.getElementById('auto-play');
+            autoPlayCheckbox.addEventListener('change', updateSpeechSettings);
+
+            // Add back the missing functions
+            function saveNotes() {
+                localStorage.setItem('vocabNotes', JSON.stringify(notes));
+            }
+
+            function saveProgress() {
+                localStorage.setItem('vocabProgress', JSON.stringify(progress));
+            }
+
+            function saveStudyStreak() {
+                localStorage.setItem('studyStreak', JSON.stringify(studyStreak));
+            }
+
+            function updateStudyStreak() {
+                const today = new Date().toDateString();
+                if (studyStreak.lastStudyDate !== today) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toDateString();
+                    
+                    if (studyStreak.lastStudyDate === yesterdayStr) {
+                        studyStreak.count++;
+                    } else {
+                        studyStreak.count = 1;
+                    }
+                    studyStreak.lastStudyDate = today;
+                    saveStudyStreak();
+                    updateStreakDisplay();
+                }
+            }
+
+            function updateStreakDisplay() {
+                const streakCount = document.getElementById('streak-count');
+                if (streakCount) {
+                    streakCount.textContent = studyStreak.count;
+                }
+            }
+
+            function getExampleSentence(word) {
+                // This is a simple template-based approach to generate contextual examples
+                // In a real app, you'd have pre-written examples stored in the vocabulary data
+                const templates = {
+                    '你': [
+                        { zh: '你好！', pinyin: 'Nǐ hǎo!', meaning: 'Xin chào!' },
+                        { zh: '你是誰？', pinyin: 'Nǐ shì shéi?', meaning: 'Bạn là ai?' }
+                    ],
+                    '來': [
+                        { zh: '請你來這裡。', pinyin: 'Qǐng nǐ lái zhèlǐ.', meaning: 'Mời bạn đến đây.' },
+                        { zh: '他來自美國。', pinyin: 'Tā lái zì Měiguó.', meaning: 'Anh ấy đến từ Mỹ.' }
+                    ],
+                    '是': [
+                        { zh: '我是學生。', pinyin: 'Wǒ shì xuéshēng.', meaning: 'Tôi là học sinh.' },
+                        { zh: '這是什麼？', pinyin: 'Zhè shì shénme?', meaning: 'Đây là cái gì?' }
+                    ],
+                    '好': [
+                        { zh: '你好嗎？', pinyin: 'Nǐ hǎo ma?', meaning: 'Bạn khỏe không?' },
+                        { zh: '這個很好。', pinyin: 'Zhège hěn hǎo.', meaning: 'Cái này rất tốt.' }
+                    ]
+                };
+                
+                // Default example for words without specific examples
+                const defaultExamples = [
+                    { zh: `這個${word.char}很重要。`, pinyin: `Zhège ${word.pinyin} hěn zhòngyào.`, meaning: `${word.char} (${word.meaning}) này rất quan trọng.` }
+                ];
+                
+                return templates[word.char] || defaultExamples;
+            }
+
+            function showExampleSentences(char) {
+                const word = vocabData.find(w => w.char === char);
+                if (!word) return;
+                
+                const exampleModal = document.getElementById('example-modal');
+                const exampleModalContent = document.getElementById('example-modal-content');
+                const exampleCharacter = document.getElementById('example-character');
+                const exampleSentences = document.getElementById('example-sentences');
+                
+                // Update character info
+                exampleCharacter.querySelector('span').textContent = char;
+                exampleCharacter.querySelector('.pinyin').textContent = word.pinyin;
+                exampleCharacter.querySelector('.meaning').textContent = word.meaning;
+                
+                exampleSentences.innerHTML = '';
+                
+                const examples = getExampleSentence(word);
+                examples.forEach(example => {
+                    const sentenceEl = document.createElement('div');
+                    sentenceEl.className = 'bg-slate-50 p-4 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors';
+                    sentenceEl.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <p class="text-lg font-bold">${example.zh}</p>
+                            <button class="speak-example-btn ml-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-full w-8 h-8 flex items-center justify-center transition-all flex-shrink-0" data-text="${example.zh}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.465a5 5 0 001.06-7.072m-2.829 9.9a9 9 0 010-12.728" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="text-sm text-slate-600 mt-1">${example.pinyin}</p>
+                        <p class="text-sm text-slate-800 mt-2 border-t border-slate-200 pt-2">${example.meaning}</p>
+                    `;
+                    exampleSentences.appendChild(sentenceEl);
+                });
+                
+                showModal(exampleModal, exampleModalContent);
+                
+                // Add event listeners
+                document.getElementById('close-example-btn').onclick = () => hideModal(exampleModal, exampleModalContent);
+                document.getElementById('close-example-modal-btn').onclick = () => hideModal(exampleModal, exampleModalContent);
+                
+                // Add speak functionality for example sentences
+                exampleSentences.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('speak-example-btn') || e.target.closest('.speak-example-btn')) {
+                        const button = e.target.classList.contains('speak-example-btn') ? e.target : e.target.closest('.speak-example-btn');
+                        const textToSpeak = button.getAttribute('data-text');
+                        speak(textToSpeak);
+                    }
+                });
+            }
         });
     </script>
 </body>
