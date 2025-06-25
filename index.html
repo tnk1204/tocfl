@@ -64,9 +64,10 @@
                     <input type="text" id="search-input" placeholder="Nhập từ..." class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                 </div>
                 <div class="w-full md:w-auto flex gap-2">
-                    <button id="review-btn" class="flex-1 w-full bg-green-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-green-700 transition flex items-center justify-center gap-2">
+                    <button id="review-btn" class="flex-1 w-full bg-green-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-green-700 transition flex items-center justify-center gap-2 relative">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
-                        Ôn tập
+                        <span id="review-btn-text">Ôn tập</span>
+                        <span id="review-count" class="absolute -top-2 -right-2 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white"></span>
                     </button>
                     <button id="practice-btn" class="flex-1 w-full bg-blue-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-blue-700 transition flex items-center justify-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v1.946l4.061 4.061a1 1 0 01-1.414 1.414l-4.5-4.5a1 1 0 011.653-1.653zM4.646 4.646a1 1 0 011.414 0L10 8.586l3.94-3.94a1 1 0 111.414 1.414L11.414 10l3.94 3.94a1 1 0 11-1.414 1.414L10 11.414l-3.94 3.94a1 1 0 01-1.414-1.414L8.586 10 4.646 6.06a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
@@ -82,6 +83,7 @@
         
         <footer class="text-center mt-12 text-slate-500 text-sm">
             <p>Nhấn vào thẻ để lật. Nhấn 🔊 để nghe phát âm.</p>
+            <button id="reset-srs-btn" class="mt-4 text-xs text-slate-400 hover:text-red-500 hover:underline">Reset toàn bộ tiến độ ôn tập</button>
         </footer>
     </div>
     
@@ -96,6 +98,9 @@
                         <option value="char-to-meaning">Chữ Hán → Nghĩa</option>
                         <option value="pinyin-to-meaning">Pinyin → Nghĩa</option>
                         <option value="meaning-to-char">Nghĩa → Chữ Hán</option>
+                        <option value="audio-to-meaning">Nghe & Chọn Nghĩa</option>
+                        <option value="char-to-type-pinyin">Chữ Hán → Gõ Pinyin</option>
+                        <option value="char-to-pinyin">Chữ Hán → Pinyin</option>
                     </select>
                 </div>
                  <div class="mb-6">
@@ -114,11 +119,18 @@
             <div id="quiz-main" class="hidden">
                  <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-bold">Trắc nghiệm</h2>
-                    <p id="quiz-progress" class="text-slate-500"></p>
+                    <div class="flex items-center gap-4">
+                        <button id="quiz-replay-audio-btn" class="hidden text-slate-500 hover:text-blue-600 focus:outline-none">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 3a1 1 0 011 1v1.468a1 1 0 01-.317.727l-1.882 1.882a4.995 4.995 0 00-5.496 5.496l-1.882 1.882A1 1 0 011 14.532V16a1 1 0 01-2 0v-1.468a1 1 0 01.317-.727l10-10A1 1 0 0110 3zm6.317 11.273l-1.882-1.882A4.995 4.995 0 008.938 6.938l-1.882-1.882A1 1 0 018 3.468V2a1 1 0 112 0v1.468a1 1 0 01-.317.727l-1.47 1.47A7.002 7.002 0 0117 11c0 1.258-.33 2.44-.913 3.473a1 1 0 01-1.77-.801zM4.913 14.473A7.003 7.003 0 013 11c0-2.286 1.08-4.32 2.76-5.553a1 1 0 111.16 1.63A4.998 4.998 0 005 11c0 1.258.33 2.44.913 3.473a1 1 0 01-1.77.801z"/>
+                           </svg>
+                        </button>
+                        <p id="quiz-progress" class="text-slate-500"></p>
+                    </div>
                  </div>
-                 <div id="quiz-question-card" class="bg-slate-100 p-8 rounded-lg text-center mb-6 min-h-[120px] flex items-center justify-center">
+                 <div id="quiz-question-card" class="bg-slate-100 p-8 rounded-lg text-center mb-6 min-h-[120px] flex items-center justify-center transition">
                     <div>
-                        <p id="quiz-question" class="text-4xl font-semibold"></p>
+                        <div id="quiz-question" class="text-4xl font-semibold"></div>
                         <p id="quiz-question-hint" class="text-slate-500 mt-2"></p>
                     </div>
                  </div>
@@ -626,6 +638,11 @@
             let currentFilteredData = [];
             let currentQuiz = { questions: [], wrongAnswers: [], currentQuestionIndex: 0, score: 0, settings: {} };
             let reviewSession = { queue: [], currentWord: null };
+            let wordStates = {};
+
+            const SRS_LEVELS = { AGAIN: 1, GOOD: 2, EASY: 3 };
+            const NEW_WORDS_PER_SESSION = 10;
+            const INITIAL_EASE_FACTOR = 2.5;
             
             const grid = document.getElementById('vocab-grid');
             const lessonFilter = document.getElementById('lesson-filter');
@@ -645,12 +662,14 @@
             const quizCloseBtn = document.getElementById('quiz-close-btn');
             const quizRestartBtn = document.getElementById('quiz-restart-btn');
             const quizReviewWrongBtn = document.getElementById('quiz-review-wrong-btn');
+            const quizReplayAudioBtn = document.getElementById('quiz-replay-audio-btn');
             
             const reviewModal = document.getElementById('review-modal');
             const reviewModalContent = document.getElementById('review-modal-content');
             const reviewCloseBtn = document.getElementById('review-close-btn');
             const reviewCardContainer = document.getElementById('review-card-container');
             const reviewDifficultyButtons = document.getElementById('review-difficulty-buttons');
+            const resetSrsBtn = document.getElementById('reset-srs-btn');
 
             // Populate lesson filter
             const lessons = [...new Set(vocabData.map(item => item.lesson))];
@@ -660,6 +679,61 @@
                 option.textContent = `Bài ${lesson}`;
                 lessonFilter.appendChild(option);
             });
+
+            function loadWordStates() {
+                const savedStates = localStorage.getItem('tocflA1WordStates');
+                if (savedStates) {
+                    wordStates = JSON.parse(savedStates);
+                    let updated = false;
+                    vocabData.forEach(word => {
+                        if (!wordStates[word.char]) {
+                            wordStates[word.char] = { interval: 0, easeFactor: INITIAL_EASE_FACTOR, nextReviewDate: Date.now(), isNew: true };
+                            updated = true;
+                        }
+                    });
+                    if (updated) saveWordStates();
+                } else {
+                    vocabData.forEach(word => {
+                        wordStates[word.char] = { interval: 0, easeFactor: INITIAL_EASE_FACTOR, nextReviewDate: Date.now(), isNew: true };
+                    });
+                    saveWordStates();
+                }
+            }
+
+            function saveWordStates() {
+                localStorage.setItem('tocflA1WordStates', JSON.stringify(wordStates));
+            }
+
+            function updateReviewButtonCount() {
+                const now = Date.now();
+                const dueCount = vocabData.filter(word => !wordStates[word.char].isNew && wordStates[word.char].nextReviewDate <= now).length;
+                const newCount = vocabData.filter(word => wordStates[word.char].isNew).length;
+                const countEl = document.getElementById('review-count');
+                const totalReviews = dueCount + newCount;
+
+                countEl.textContent = totalReviews > 0 ? totalReviews : '✓';
+                countEl.classList.remove('bg-orange-500', 'bg-green-500', 'bg-blue-600');
+
+                if (dueCount > 0) {
+                    countEl.classList.add('bg-orange-500'); // Due cards are priority
+                } else if (newCount > 0) {
+                    countEl.classList.add('bg-green-500'); // New cards
+                } else {
+                    countEl.classList.add('bg-blue-500'); // All done
+                }
+            }
+            
+            function getReviewQueue() {
+                const now = Date.now();
+                const dueWords = vocabData
+                    .filter(word => !wordStates[word.char].isNew && wordStates[word.char].nextReviewDate <= now);
+                const newWords = vocabData
+                    .filter(word => wordStates[word.char].isNew)
+                    .slice(0, NEW_WORDS_PER_SESSION - dueWords.length);
+
+                const queue = [...dueWords, ...newWords];
+                return queue.sort(() => 0.5 - Math.random());
+            }
 
             function speak(text) {
                 if ('speechSynthesis' in window) {
@@ -755,9 +829,11 @@
                  content.classList.add('scale-95', 'opacity-0');
                  setTimeout(() => {
                     modal.classList.remove('active');
+                    // Reset quiz UI state when closing modal
                     quizSetup.style.display = 'block';
                     quizMain.style.display = 'none';
                     quizResults.style.display = 'none';
+                    document.getElementById('quiz-replay-audio-btn').classList.add('hidden');
                  }, 300);
             }
             
@@ -788,6 +864,7 @@
                     return;
                 }
 
+                const questionCard = document.getElementById('quiz-question-card');
                 const questionEl = document.getElementById('quiz-question');
                 const hintEl = document.getElementById('quiz-question-hint');
                 const optionsEl = document.getElementById('quiz-options');
@@ -796,47 +873,116 @@
 
                 feedbackEl.textContent = '';
                 optionsEl.innerHTML = '';
+                questionEl.innerHTML = ''; // Use innerHTML to support icon for audio question
+                hintEl.textContent = '';
+                quizReplayAudioBtn.classList.add('hidden');
+                questionCard.classList.remove('cursor-pointer', 'hover:bg-slate-200');
+                questionCard.onclick = null;
                 
                 progressEl.textContent = `Câu ${currentQuiz.currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
                 const currentWord = currentQuiz.questions[currentQuiz.currentQuestionIndex];
                 let questionText, questionHint = '', answerKey, optionKey;
 
-                if (currentQuiz.settings.type === 'char-to-meaning') {
-                    questionText = currentWord.char;
-                    questionHint = currentWord.pinyin;
-                    answerKey = 'meaning';
-                    optionKey = 'meaning';
-                } else if (currentQuiz.settings.type === 'pinyin-to-meaning') {
-                    questionText = currentWord.pinyin;
-                    questionHint = `(Gợi ý: ${currentWord.char})`;
-                    answerKey = 'meaning';
-                    optionKey = 'meaning';
-                } else {
-                    questionText = currentWord.meaning;
-                    questionHint = `(Pinyin: ${currentWord.pinyin})`;
-                    answerKey = 'char';
-                    optionKey = 'char';
+                switch (currentQuiz.settings.type) {
+                    case 'char-to-meaning':
+                        questionText = currentWord.char;
+                        questionHint = currentWord.pinyin;
+                        answerKey = 'meaning';
+                        optionKey = 'meaning';
+                        break;
+                    case 'pinyin-to-meaning':
+                        questionText = currentWord.pinyin;
+                        questionHint = `(Gợi ý: ${currentWord.char})`;
+                        answerKey = 'meaning';
+                        optionKey = 'meaning';
+                        break;
+                    case 'meaning-to-char':
+                        questionText = currentWord.meaning;
+                        questionHint = `(Pinyin: ${currentWord.pinyin})`;
+                        answerKey = 'char';
+                        optionKey = 'char';
+                        break;
+                    case 'char-to-pinyin':
+                        questionText = currentWord.char;
+                        questionHint = `(Nghĩa: ${currentWord.meaning})`;
+                        answerKey = 'pinyin';
+                        optionKey = 'pinyin';
+                        break;
+                    case 'audio-to-meaning':
+                        questionText = `<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.414z" clip-rule="evenodd" /></svg>`;
+                        questionHint = `Nghe và chọn nghĩa đúng`;
+                        answerKey = 'meaning';
+                        optionKey = 'meaning';
+                        
+                        quizReplayAudioBtn.classList.remove('hidden');
+                        quizReplayAudioBtn.onclick = () => speak(currentWord.char);
+                        questionCard.classList.add('cursor-pointer', 'hover:bg-slate-200');
+                        questionCard.onclick = () => speak(currentWord.char);
+                        
+                        // Auto-play sound for the question
+                        speak(currentWord.char);
+                        break;
+                    case 'char-to-type-pinyin':
+                        questionText = currentWord.char;
+                        questionHint = "Gõ pinyin (dùng 'v' cho 'ü') và nhấn Enter";
+                        
+                        optionsEl.innerHTML = `
+                            <div class="flex gap-2">
+                                <input type="text" id="pinyin-input" class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="e.g., nvhǎo" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                                <button id="check-pinyin-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Kiểm tra</button>
+                            </div>
+                        `;
+                        
+                        const pinyinInput = document.getElementById('pinyin-input');
+                        const checkPinyinBtn = document.getElementById('check-pinyin-btn');
+
+                        const checkAnswer = () => {
+                            const userInput = pinyinInput.value;
+                            if (userInput.trim() === '') return;
+                            checkTypingAnswer(userInput, currentWord);
+                        };
+
+                        checkPinyinBtn.onclick = checkAnswer;
+                        pinyinInput.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter') {
+                                checkAnswer();
+                            }
+                        });
+                        
+                        setTimeout(() => pinyinInput.focus(), 100);
+                        break;
                 }
 
-                questionEl.textContent = questionText;
+                if (currentQuiz.settings.type === 'char-to-type-pinyin') {
+                    questionEl.textContent = questionText;
+                } else if (currentQuiz.settings.type === 'audio-to-meaning') {
+                    questionEl.innerHTML = questionText;
+                } else {
+                    questionEl.textContent = questionText;
+                }
                 hintEl.textContent = questionHint;
 
-                const options = [currentWord];
-                let allPossibleOptions = vocabData.filter(w => w.char !== currentWord.char);
-                while(options.length < 4) {
-                    const randomWord = allPossibleOptions[Math.floor(Math.random() * allPossibleOptions.length)];
-                    if (!options.some(opt => opt[optionKey] === randomWord[optionKey])) {
-                        options.push(randomWord);
+                // For non-typing questions, create multiple choice options
+                if (currentQuiz.settings.type !== 'char-to-type-pinyin') {
+                    const options = [currentWord];
+                    let allPossibleOptions = vocabData.filter(w => w.char !== currentWord.char);
+                    while(options.length < 4 && allPossibleOptions.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * allPossibleOptions.length);
+                        const randomWord = allPossibleOptions[randomIndex];
+                        if (!options.some(opt => opt[optionKey] === randomWord[optionKey])) {
+                            options.push(randomWord);
+                        }
+                        allPossibleOptions.splice(randomIndex, 1);
                     }
-                }
 
-                options.sort(() => 0.5 - Math.random()).forEach(opt => {
-                    const button = document.createElement('button');
-                    button.className = 'w-full text-left p-4 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition';
-                    button.innerHTML = `<span class="font-semibold text-lg">${opt[optionKey]}</span>`;
-                    button.onclick = () => checkQuizAnswer(opt === currentWord, currentWord, opt[optionKey]);
-                    optionsEl.appendChild(button);
-                });
+                    options.sort(() => 0.5 - Math.random()).forEach(opt => {
+                        const button = document.createElement('button');
+                        button.className = 'w-full text-left p-4 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition';
+                        button.innerHTML = `<span class="font-semibold text-lg">${opt[optionKey]}</span>`;
+                        button.onclick = () => checkQuizAnswer(opt === currentWord, currentWord, opt[optionKey]);
+                        optionsEl.appendChild(button);
+                    });
+                }
             }
 
             function checkQuizAnswer(isCorrect, correctWord, chosenAnswer) {
@@ -847,10 +993,11 @@
                  if(isCorrect) {
                      currentQuiz.score++;
                      feedbackEl.textContent = 'Chính xác!';
-                     feedbackEl.className = 'mt-4 text-center font-semibold text-green-600';
+                     feedbackEl.className = 'mt-4 text-center font-semibold text-green-600 h-6';
                  } else {
-                     feedbackEl.textContent = `Sai rồi! Đáp án đúng là "${correctWord[currentQuiz.settings.type.split('-')[1]]}"`;
-                     feedbackEl.className = 'mt-4 text-center font-semibold text-red-600';
+                     const answerKey = currentQuiz.settings.type.split('-')[2]; // meaning, char, or pinyin
+                     feedbackEl.textContent = `Sai rồi! Đáp án đúng là "${correctWord[answerKey]}"`;
+                     feedbackEl.className = 'mt-4 text-center font-semibold text-red-600 h-6';
                      currentQuiz.wrongAnswers.push({ question: correctWord, chosen: chosenAnswer });
                  }
 
@@ -901,14 +1048,22 @@
                 quizMain.style.display = 'block';
                 displayQuizQuestion();
             });
+            quizReplayAudioBtn.addEventListener('click', () => {
+                currentQuiz.questions = currentQuiz.wrongAnswers.map(item => item.question);
+                currentQuiz.currentQuestionIndex = 0;
+                currentQuiz.score = 0;
+                currentQuiz.wrongAnswers = [];
+                quizResults.style.display = 'none';
+                quizMain.style.display = 'block';
+                displayQuizQuestion();
+            });
             
             reviewBtn.addEventListener('click', () => {
-                let sourceData = getFilteredData();
-                if (sourceData.length === 0) {
-                    alert('Hãy chọn một bộ từ để ôn tập.');
+                reviewSession.queue = getReviewQueue();
+                if (reviewSession.queue.length === 0) {
+                    alert('Tuyệt vời! Bạn đã ôn hết các từ cần ôn hôm nay.');
                     return;
                 }
-                reviewSession.queue = [...sourceData].sort(() => 0.5 - Math.random());
                 startReviewSession();
             });
 
@@ -927,40 +1082,146 @@
                  }
                  document.getElementById('review-progress').textContent = `Còn lại: ${reviewSession.queue.length} từ`;
                  reviewDifficultyButtons.classList.add('hidden');
-                 reviewCardContainer.querySelector('.flashcard').classList.remove('is-flipped');
+                 const flashcard = reviewCardContainer.querySelector('.flashcard');
+                 flashcard.classList.remove('is-flipped');
 
-                 reviewSession.currentWord = reviewSession.queue.shift();
-                 const word = reviewSession.currentWord;
-                 document.getElementById('review-card-front').innerHTML = `<span class="text-5xl font-semibold">${word.char}</span>`;
-                 document.getElementById('review-card-back').innerHTML = `
+                 // Delay removing and adding content to allow flip animation to reset
+                 setTimeout(() => {
+                    reviewSession.currentWord = reviewSession.queue.shift();
+                    const word = reviewSession.currentWord;
+                    document.getElementById('review-card-front').innerHTML = `<span class="text-5xl font-semibold">${word.char}</span>`;
+                    document.getElementById('review-card-back').innerHTML = `
                         <p class="text-3xl font-semibold">${word.char}</p>
                         <p class="text-xl mt-2">${word.pinyin}</p>
                         <p class="mt-2 text-lg text-center">${word.meaning}</p>
-                 `;
+                        <button class="speak-btn" data-text="${word.char}">🔊</button>
+                    `;
+                    // Auto play sound for new card
+                    speak(word.char);
+                 }, 300); // Should be half of the transition duration
             }
 
-            reviewCardContainer.addEventListener('click', () => {
+            reviewCardContainer.addEventListener('click', (e) => {
+                if(e.target.classList.contains('speak-btn')) {
+                    e.stopPropagation();
+                    const textToSpeak = e.target.getAttribute('data-text');
+                    speak(textToSpeak);
+                    return;
+                }
                 reviewCardContainer.querySelector('.flashcard').classList.add('is-flipped');
                 reviewDifficultyButtons.classList.remove('hidden');
             });
             
+            function updateSRS(wordChar, performance) {
+                let state = wordStates[wordChar];
+                const wasNew = state.isNew;
+                state.isNew = false;
+                
+                if (performance === SRS_LEVELS.AGAIN) {
+                    state.easeFactor = Math.max(1.3, state.easeFactor - 0.2);
+                    state.interval = 0; // Reset progress
+                } else {
+                    if (wasNew) {
+                         state.interval = performance === SRS_LEVELS.GOOD ? 1 : 4; // 1 day for good, 4 for easy on new cards
+                    } else {
+                        let newInterval = state.interval;
+                        if (performance === SRS_LEVELS.GOOD) {
+                            newInterval = state.interval * state.easeFactor;
+                        } else if (performance === SRS_LEVELS.EASY) {
+                            state.easeFactor += 0.15;
+                            newInterval = state.interval * state.easeFactor;
+                        }
+                        state.interval = Math.ceil(newInterval);
+                    }
+                }
+                
+                let nextDate = new Date();
+                if (state.interval > 0) {
+                    nextDate.setDate(nextDate.getDate() + state.interval);
+                } else {
+                    // For 'AGAIN', it will be re-added to the current queue, so next review is now.
+                }
+                state.nextReviewDate = nextDate.getTime();
+                saveWordStates();
+            }
+
             reviewDifficultyButtons.addEventListener('click', (e) => {
                 if(e.target.matches('.btn-difficulty')) {
                     const difficulty = parseInt(e.target.dataset.difficulty);
-                    if (difficulty === 1) { 
-                        reviewSession.queue.splice(1, 0, reviewSession.currentWord);
-                    } else if (difficulty === 2) { 
-                        reviewSession.queue.splice(Math.floor(reviewSession.queue.length / 2), 0, reviewSession.currentWord);
+                    const word = reviewSession.currentWord;
+                    
+                    updateSRS(word.char, difficulty);
+
+                    if (difficulty === SRS_LEVELS.AGAIN) { 
+                        // Re-insert the hard word a few spots later in the queue to see it again soon.
+                        reviewSession.queue.splice(Math.min(3, reviewSession.queue.length), 0, word);
                     }
+                    
                     nextReviewWord();
+                    updateReviewButtonCount();
                 }
             });
 
             reviewCloseBtn.addEventListener('click', () => hideModal(reviewModal, reviewModalContent));
             
+            resetSrsBtn.addEventListener('click', () => {
+                if (confirm('Bạn có chắc chắn muốn xóa toàn bộ tiến độ ôn tập không? Hành động này không thể hoàn tác.')) {
+                    localStorage.removeItem('tocflA1WordStates');
+                    loadWordStates();
+                    updateReviewButtonCount();
+                    alert('Đã xóa tiến độ ôn tập.');
+                }
+            });
+
+            function normalizePinyin(pinyin) {
+                // A simple normalization: lowercase, trim, remove tones, and handle ü.
+                const toneMap = {
+                    'ā': 'a', 'á': 'a', 'ǎ': 'a', 'à': 'a',
+                    'ō': 'o', 'ó': 'o', 'ǒ': 'o', 'ò': 'o',
+                    'ē': 'e', 'é': 'e', 'ě': 'e', 'è': 'e',
+                    'ī': 'i', 'í': 'i', 'ǐ': 'i', 'ì': 'i',
+                    'ū': 'u', 'ú': 'u', 'ǔ': 'u', 'ù': 'u',
+                    'ǖ': 'ü', 'ǘ': 'ü', 'ǚ': 'ü', 'ǜ': 'ü'
+                };
+                return pinyin.toLowerCase().trim().split('').map(char => toneMap[char] || char).join('').replace(/ü/g, 'v'); // Use 'v' for ü as per common input method
+            }
+
+            function checkTypingAnswer(userInput, correctWord) {
+                const feedbackEl = document.getElementById('quiz-feedback');
+                const pinyinInput = document.getElementById('pinyin-input');
+                const checkPinyinBtn = document.getElementById('check-pinyin-btn');
+
+                pinyinInput.disabled = true;
+                if(checkPinyinBtn) checkPinyinBtn.disabled = true;
+
+                const normalizedUserInput = userInput.toLowerCase().trim().replace(/\s+/g, '').replace(/u:/g, 'v');
+
+                const correctPinyins = correctWord.pinyin.split('/')
+                    .map(p => normalizePinyin(p).replace(/\s+/g, ''));
+                
+                const isCorrect = correctPinyins.some(p => p === normalizedUserInput);
+
+                if (isCorrect) {
+                    currentQuiz.score++;
+                    feedbackEl.textContent = 'Chính xác!';
+                    feedbackEl.className = 'mt-4 text-center font-semibold text-green-600 h-6';
+                    pinyinInput.classList.add('!border-green-500');
+                } else {
+                    feedbackEl.textContent = `Sai rồi! Đáp án: ${correctWord.pinyin}`;
+                    feedbackEl.className = 'mt-4 text-center font-semibold text-red-600 h-6';
+                    pinyinInput.classList.add('!border-red-500');
+                    currentQuiz.wrongAnswers.push({ question: correctWord, chosen: userInput });
+                }
+
+                currentQuiz.currentQuestionIndex++;
+                setTimeout(displayQuizQuestion, 2000);
+            }
+
             // Initial Setup
             lessonFilter.addEventListener('change', filterAndRender);
             searchInput.addEventListener('input', filterAndRender);
+            loadWordStates();
+            updateReviewButtonCount();
             filterAndRender();
         });
     </script>
