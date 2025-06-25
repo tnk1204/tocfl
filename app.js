@@ -140,22 +140,26 @@ function createWordCard(word, index) {
                     <div class="text-center">
                         <div class="text-lg font-semibold mb-1">${word.pinyin}</div>
                         <div class="text-sm">${word.meaning}</div>
-                        <button class="mt-2 text-white hover:text-blue-200 transition-colors" onclick="playAudio('${word.char}')">
-                            🔊
-                        </button>
+                        <button class="mt-2 text-white hover:text-blue-200 transition-colors speak-btn" type="button">🔊</button>
                     </div>
                 </div>
             </div>
         </div>
     `;
-    
-    // Add click event to flip card
+
+    // Lật thẻ khi click (trừ khi click vào nút phát âm)
     card.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'BUTTON') {
+        if (!e.target.classList.contains('speak-btn')) {
             card.querySelector('.flashcard').classList.toggle('flipped');
         }
     });
-    
+
+    // Phát âm khi click nút
+    card.querySelector('.speak-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        playAudio(word.char);
+    });
+
     return card;
 }
 
