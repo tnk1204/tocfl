@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ôn tập Từ vựng TOCFL A1</title>
+    <title>Công cụ Ôn tập Từ vựng TOCFL A1 Nâng cao</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chosen Palette: Slate & Blue -->
-    <!-- Application Structure Plan: The app is a single-page dashboard for vocabulary learning. The core structure features a control panel for filtering and initiating practice modes, and a main grid for vocabulary exploration. This update introduces a new 'Review Mode' alongside the existing 'Quiz Mode', both launched via modals. This dual-mode approach caters to different learning styles: active recall via quizzes and spaced repetition via focused review. The information architecture is designed for task-oriented learning (browse, search, quiz, review) rather than a static presentation. -->
-    <!-- Visualization & Content Choices: Data is presented as interactive flashcards. Goal: Memorization. Method: Interactive Cards & Modals. Interaction: Flip cards, use text-to-speech, take quizzes, and use a focused review mode with self-assessment. Justification: These methods are based on proven learning techniques like active recall and spaced repetition, significantly boosting memory retention over passive reading. All elements are built with HTML/CSS. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body { font-family: 'Inter', sans-serif; }
         .flashcard { perspective: 1000px; }
@@ -16,6 +12,19 @@
         .flashcard.is-flipped .flashcard-inner { transform: rotateY(180deg); }
         .flashcard-front, .flashcard-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; border-radius: 0.75rem; }
         .flashcard-back { transform: rotateY(180deg); }
+        .srs-dot {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .srs-level-0 { background-color: #94a3b8; } /* Not seen */
+        .srs-level-1, .srs-level-2 { background-color: #facc15; } /* Learning */
+        .srs-level-3, .srs-level-4, .srs-level-5 { background-color: #22c55e; } /* Mastered */
+        
         .speak-btn {
             position: absolute;
             bottom: 8px;
@@ -32,6 +41,15 @@
             transition: background 0.2s;
         }
         .speak-btn:hover { background: rgba(255, 255, 255, 0.4); }
+        .speak-btn-modal {
+            background: #e2e8f0; color: #475569;
+            border-radius: 50%; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; cursor: pointer; transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .speak-btn-modal:hover { background: #cbd5e1; }
+
         .modal-base { display: none; }
         .modal-base.active { display: flex; }
         ::-webkit-scrollbar { width: 8px; }
@@ -47,24 +65,33 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Công cụ Ôn tập Từ vựng TOCFL A1</h1>
-            <p class="text-slate-600 mt-2">Sách "A Course in Contemporary Chinese" - Bài 1 đến 15</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Công cụ Ôn tập Từ vựng TOCFL A1 (Nâng cấp)</h1>
+            <p class="text-slate-600 mt-2">Tích hợp Lặp lại Ngắt quãng (SRS) và Phát âm</p>
         </header>
 
         <div class="sticky top-0 bg-slate-50/80 backdrop-blur-sm z-10 py-4 mb-6">
             <div class="flex flex-col md:flex-row gap-4 max-w-5xl mx-auto items-end">
-                <div class="flex-grow w-full md:w-1/3">
-                    <label for="lesson-filter" class="block text-sm font-medium text-slate-700 mb-1">Lọc</label>
+                <div class="flex-grow w-full">
+                    <label for="lesson-filter" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo Bài</label>
                     <select id="lesson-filter" class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                         <option value="all">Tất cả bài học</option>
                     </select>
                 </div>
-                <div class="flex-grow w-full md:w-1/3">
+                 <div class="flex-grow w-full">
+                    <label for="srs-filter" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo Trạng thái</label>
+                    <select id="srs-filter" class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="new">Chưa học</option>
+                        <option value="learning">Đang học</option>
+                        <option value="mastered">Đã thuộc</option>
+                    </select>
+                </div>
+                <div class="flex-grow w-full">
                      <label for="search-input" class="block text-sm font-medium text-slate-700 mb-1">Tìm kiếm</label>
                     <input type="text" id="search-input" placeholder="Nhập từ..." class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                 </div>
                 <div class="w-full md:w-auto flex gap-2">
-                    <button id="review-btn" class="flex-1 w-full bg-green-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-green-700 transition flex items-center justify-center gap-2">
+                    <button id="review-btn" class="flex-1 w-full bg-green-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-green-700 transition flex items-center justify-center gap-2" title="Ôn tập các từ đã đến hạn theo phương pháp Lặp lại Ngắt quãng">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
                         Ôn tập
                     </button>
@@ -81,7 +108,7 @@
         </main>
         
         <footer class="text-center mt-12 text-slate-500 text-sm">
-            <p>Nhấn vào thẻ để lật. Nhấn 🔊 để nghe phát âm.</p>
+            <p>Nhấn vào thẻ để lật. Chấm màu biểu thị tiến độ: <span class="inline-block w-2 h-2 rounded-full bg-gray-400"></span> Xám (Chưa học), <span class="inline-block w-2 h-2 rounded-full bg-yellow-400"></span> Vàng (Đang học), <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span> Xanh (Đã thuộc).</p>
         </footer>
     </div>
     
@@ -101,7 +128,7 @@
                  <div class="mb-6">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Nội dung</label>
                     <select id="quiz-source" class="w-full p-3 bg-white border border-slate-300 rounded-lg">
-                        <option value="current">Từ đang lọc</option>
+                        <option value="current">Từ đang lọc (khuyên dùng)</option>
                         <option value="all">Tất cả từ vựng</option>
                     </select>
                 </div>
@@ -116,11 +143,12 @@
                     <h2 class="text-2xl font-bold">Trắc nghiệm</h2>
                     <p id="quiz-progress" class="text-slate-500"></p>
                  </div>
-                 <div id="quiz-question-card" class="bg-slate-100 p-8 rounded-lg text-center mb-6 min-h-[120px] flex items-center justify-center">
-                    <div>
+                 <div id="quiz-question-card" class="bg-slate-100 p-8 rounded-lg mb-6 min-h-[120px] flex items-center justify-center gap-4">
+                    <div class="text-center">
                         <p id="quiz-question" class="text-4xl font-semibold"></p>
                         <p id="quiz-question-hint" class="text-slate-500 mt-2"></p>
                     </div>
+                    <button id="quiz-speak-btn" class="speak-btn-modal">🔊</button>
                  </div>
                  <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                  <div id="quiz-feedback" class="mt-4 text-center font-semibold h-6"></div>
@@ -141,23 +169,27 @@
     
     <div id="review-modal" class="modal-base fixed inset-0 bg-slate-900 bg-opacity-80 justify-center items-center z-50 p-4">
         <div class="bg-white rounded-lg shadow-2xl p-6 md:p-8 w-full max-w-2xl transform transition-all scale-95 opacity-0" id="review-modal-content">
-             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold">Chế độ Ôn tập Thông minh</h2>
-                <button id="review-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl leading-none">&times;</button>
+             <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Chế độ Ôn tập Thông minh</h2>
+                    <p id="review-queue-info" class="text-slate-500 text-sm mt-1"></p>
+                </div>
+                <button id="review-close-btn" class="text-slate-500 hover:text-slate-800 text-3xl leading-none">&times;</button>
              </div>
-             <p id="review-progress" class="text-center text-slate-500 mb-4"></p>
-             <div id="review-card-container" class="h-64">
+             
+             <div id="review-card-container" class="h-64 cursor-pointer">
                  <div class="flashcard h-full">
                     <div class="flashcard-inner">
-                        <div id="review-card-front" class="flashcard-front bg-slate-100 shadow-md"></div>
+                        <div id="review-card-front" class="flashcard-front bg-slate-100 shadow-md flex-row items-center justify-center gap-4"></div>
                         <div id="review-card-back" class="flashcard-back bg-blue-600 text-white shadow-md"></div>
                     </div>
                  </div>
              </div>
+             <p id="review-progress" class="text-center text-slate-500 my-4"></p>
              <div id="review-difficulty-buttons" class="mt-6 flex justify-around hidden">
-                 <button data-difficulty="1" class="btn-difficulty border-2 border-transparent w-1/3 py-3 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition">Khó</button>
-                 <button data-difficulty="2" class="btn-difficulty border-2 border-transparent w-1/3 py-3 mx-4 rounded-lg bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition">Vừa</button>
-                 <button data-difficulty="3" class="btn-difficulty border-2 border-transparent w-1/3 py-3 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">Dễ</button>
+                 <button data-difficulty="1" class="btn-difficulty w-1/3 py-3 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition">Khó</button>
+                 <button data-difficulty="2" class="btn-difficulty w-1/3 py-3 mx-4 rounded-lg bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition">Vừa</button>
+                 <button data-difficulty="3" class="btn-difficulty w-1/3 py-3 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">Dễ</button>
              </div>
         </div>
     </div>
@@ -623,12 +655,18 @@
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
+            let vocabProgress = {};
             let currentFilteredData = [];
             let currentQuiz = { questions: [], wrongAnswers: [], currentQuestionIndex: 0, score: 0, settings: {} };
-            let reviewSession = { queue: [], currentWord: null };
+            let reviewSession = { queue: [], currentWord: null, total: 0 };
             
+            // SRS Intervals in seconds (e.g., 4h, 8h, 1d, 3d, 7d, 14d, 30d, 90d)
+            const srsIntervals = [4 * 3600, 8 * 3600, 24 * 3600, 3 * 24 * 3600, 7 * 24 * 3600, 14 * 24 * 3600, 30 * 24 * 3600, 90 * 24 * 3600];
+
+            // DOM Elements
             const grid = document.getElementById('vocab-grid');
             const lessonFilter = document.getElementById('lesson-filter');
+            const srsFilter = document.getElementById('srs-filter');
             const searchInput = document.getElementById('search-input');
             const wordCountEl = document.getElementById('word-count');
             
@@ -645,6 +683,7 @@
             const quizCloseBtn = document.getElementById('quiz-close-btn');
             const quizRestartBtn = document.getElementById('quiz-restart-btn');
             const quizReviewWrongBtn = document.getElementById('quiz-review-wrong-btn');
+            const quizSpeakBtn = document.getElementById('quiz-speak-btn');
             
             const reviewModal = document.getElementById('review-modal');
             const reviewModalContent = document.getElementById('review-modal-content');
@@ -652,15 +691,7 @@
             const reviewCardContainer = document.getElementById('review-card-container');
             const reviewDifficultyButtons = document.getElementById('review-difficulty-buttons');
 
-            // Populate lesson filter
-            const lessons = [...new Set(vocabData.map(item => item.lesson))];
-            lessons.sort((a, b) => a - b).forEach(lesson => {
-                const option = document.createElement('option');
-                option.value = lesson;
-                option.textContent = `Bài ${lesson}`;
-                lessonFilter.appendChild(option);
-            });
-
+            // --- Core Functions ---
             function speak(text) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
@@ -673,7 +704,94 @@
                 }
             }
 
-            const renderCards = (data) => {
+            function showModal(modal, content) {
+                modal.classList.add('active');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                }, 10);
+            }
+
+            function hideModal(modal, content) {
+                 content.classList.add('scale-95', 'opacity-0');
+                 setTimeout(() => {
+                    modal.classList.remove('active');
+                    // Reset quiz modal state
+                    quizSetup.style.display = 'block';
+                    quizMain.style.display = 'none';
+                    quizResults.style.display = 'none';
+                 }, 300);
+            }
+
+            // --- SRS (Spaced Repetition System) Functions ---
+            function loadProgress() {
+                const savedProgress = localStorage.getItem('vocabProgress_TOCFL_A1');
+                if (savedProgress) {
+                    vocabProgress = JSON.parse(savedProgress);
+                }
+                // Ensure all words have a progress entry
+                vocabData.forEach(word => {
+                    const wordKey = `${word.lesson}-${word.char}`;
+                    if (!vocabProgress[wordKey]) {
+                        vocabProgress[wordKey] = {
+                            level: 0, // 0: new, 1-2: learning, 3+: mastered
+                            nextReview: Date.now() 
+                        };
+                    }
+                });
+                saveProgress();
+            }
+
+            function saveProgress() {
+                localStorage.setItem('vocabProgress_TOCFL_A1', JSON.stringify(vocabProgress));
+            }
+
+            function getSrsStatus(level) {
+                if (level === 0) return 'new';
+                if (level >= 1 && level <= 2) return 'learning';
+                return 'mastered';
+            }
+
+            // --- Rendering and Filtering ---
+            function populateFilters() {
+                const lessons = [...new Set(vocabData.map(item => item.lesson))];
+                lessons.sort((a, b) => a - b).forEach(lesson => {
+                    const option = document.createElement('option');
+                    option.value = lesson;
+                    option.textContent = `Bài ${lesson}`;
+                    lessonFilter.appendChild(option);
+                });
+            }
+
+            const getFilteredData = () => {
+                 const selectedLesson = lessonFilter.value;
+                 const selectedSrsStatus = srsFilter.value;
+                 const searchTerm = searchInput.value.toLowerCase().trim();
+                 let filteredData = vocabData;
+
+                 if (selectedLesson !== 'all') {
+                     filteredData = filteredData.filter(word => word.lesson == selectedLesson);
+                 }
+
+                 if (selectedSrsStatus !== 'all') {
+                     filteredData = filteredData.filter(word => {
+                         const wordKey = `${word.lesson}-${word.char}`;
+                         const progress = vocabProgress[wordKey];
+                         return getSrsStatus(progress.level) === selectedSrsStatus;
+                     });
+                 }
+                
+                 if (searchTerm) {
+                     filteredData = filteredData.filter(word => 
+                         word.char.toLowerCase().includes(searchTerm) ||
+                         word.pinyin.toLowerCase().includes(searchTerm) ||
+                         word.meaning.toLowerCase().includes(searchTerm)
+                     );
+                 }
+                 return filteredData;
+            }
+
+            const renderCards = () => {
+                const data = getFilteredData();
                 grid.innerHTML = '';
                 if (data.length === 0) {
                     grid.innerHTML = `<p class="col-span-full text-center text-slate-500">Không tìm thấy từ vựng nào.</p>`;
@@ -685,6 +803,11 @@
                 currentFilteredData = data;
 
                 data.forEach(word => {
+                    const wordKey = `${word.lesson}-${word.char}`;
+                    const progress = vocabProgress[wordKey];
+                    const srsLevelClass = `srs-level-${Math.min(progress.level, 5)}`;
+
+
                     const cardWrapper = document.createElement('div');
                     cardWrapper.className = 'flashcard h-32';
                     
@@ -693,8 +816,11 @@
                     inner.addEventListener('click', () => cardWrapper.classList.toggle('is-flipped'));
 
                     const front = document.createElement('div');
-                    front.className = 'flashcard-front bg-white shadow-lg border border-slate-200';
-                    front.innerHTML = `<span class="text-3xl font-semibold text-slate-800 text-center">${word.char}</span>`;
+                    front.className = 'flashcard-front bg-white shadow-lg border border-slate-200 relative';
+                    front.innerHTML = `
+                        <span class="srs-dot ${srsLevelClass}"></span>
+                        <span class="text-3xl font-semibold text-slate-800 text-center">${word.char}</span>
+                    `;
 
                     const back = document.createElement('div');
                     back.className = 'flashcard-back bg-blue-600 text-white shadow-lg relative';
@@ -712,58 +838,14 @@
                 });
             }
             
-            grid.addEventListener('click', function(e) {
-                if (e.target.classList.contains('speak-btn')) {
-                    e.stopPropagation();
-                    const textToSpeak = e.target.getAttribute('data-text');
-                    speak(textToSpeak);
-                }
-            });
-
-            const getFilteredData = () => {
-                 const selectedLesson = lessonFilter.value;
-                 const searchTerm = searchInput.value.toLowerCase();
-                 let filteredData = vocabData;
-
-                 if (selectedLesson !== 'all') {
-                     filteredData = filteredData.filter(word => word.lesson == selectedLesson);
-                 }
-                
-                 if (searchTerm) {
-                     filteredData = filteredData.filter(word => 
-                         word.char.toLowerCase().includes(searchTerm) ||
-                         word.pinyin.toLowerCase().includes(searchTerm) ||
-                         word.meaning.toLowerCase().includes(searchTerm)
-                     );
-                 }
-                 return filteredData;
-            }
-
             const filterAndRender = () => {
-                const data = getFilteredData();
-                renderCards(data);
+                renderCards();
             }
 
-            function showModal(modal, content) {
-                modal.classList.add('active');
-                setTimeout(() => {
-                    content.classList.remove('scale-95', 'opacity-0');
-                }, 10);
-            }
-
-            function hideModal(modal, content) {
-                 content.classList.add('scale-95', 'opacity-0');
-                 setTimeout(() => {
-                    modal.classList.remove('active');
-                    quizSetup.style.display = 'block';
-                    quizMain.style.display = 'none';
-                    quizResults.style.display = 'none';
-                 }, 300);
-            }
-            
+            // --- Quiz Mode Functions ---
             function setupQuiz() {
                 const quizSource = document.getElementById('quiz-source').value;
-                let sourceData = (quizSource === 'current') ? getFilteredData() : vocabData;
+                let sourceData = (quizSource === 'current' && currentFilteredData.length > 0) ? currentFilteredData : vocabData;
 
                 if (sourceData.length < 4) {
                     alert('Cần ít nhất 4 từ trong danh sách đã chọn để tạo bài kiểm tra.');
@@ -799,27 +881,33 @@
                 
                 progressEl.textContent = `Câu ${currentQuiz.currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
                 const currentWord = currentQuiz.questions[currentQuiz.currentQuestionIndex];
-                let questionText, questionHint = '', answerKey, optionKey;
+                let questionText, questionHint = '', answerKey, optionKey, speakText;
 
+                quizSpeakBtn.style.display = 'flex';
                 if (currentQuiz.settings.type === 'char-to-meaning') {
                     questionText = currentWord.char;
                     questionHint = currentWord.pinyin;
                     answerKey = 'meaning';
                     optionKey = 'meaning';
+                    speakText = currentWord.char;
                 } else if (currentQuiz.settings.type === 'pinyin-to-meaning') {
                     questionText = currentWord.pinyin;
                     questionHint = `(Gợi ý: ${currentWord.char})`;
                     answerKey = 'meaning';
                     optionKey = 'meaning';
-                } else {
+                    speakText = currentWord.char;
+                } else { // meaning-to-char
                     questionText = currentWord.meaning;
                     questionHint = `(Pinyin: ${currentWord.pinyin})`;
                     answerKey = 'char';
                     optionKey = 'char';
+                    speakText = currentWord.char;
+                    quizSpeakBtn.style.display = 'none'; // Don't give away the answer
                 }
 
                 questionEl.textContent = questionText;
                 hintEl.textContent = questionHint;
+                quizSpeakBtn.onclick = () => speak(speakText);
 
                 const options = [currentWord];
                 let allPossibleOptions = vocabData.filter(w => w.char !== currentWord.char);
@@ -828,6 +916,7 @@
                     if (!options.some(opt => opt[optionKey] === randomWord[optionKey])) {
                         options.push(randomWord);
                     }
+                    allPossibleOptions = allPossibleOptions.filter(w => w.char !== randomWord.char);
                 }
 
                 options.sort(() => 0.5 - Math.random()).forEach(opt => {
@@ -843,19 +932,23 @@
                 const feedbackEl = document.getElementById('quiz-feedback');
                 const options = document.querySelectorAll('#quiz-options button');
                 options.forEach(btn => btn.disabled = true);
+                
+                const answerKey = currentQuiz.settings.type.includes('meaning') ? 'meaning' : 'char';
 
                  if(isCorrect) {
                      currentQuiz.score++;
                      feedbackEl.textContent = 'Chính xác!';
                      feedbackEl.className = 'mt-4 text-center font-semibold text-green-600';
+                     speak('對'); // Speak "duì" for correct
                  } else {
-                     feedbackEl.textContent = `Sai rồi! Đáp án đúng là "${correctWord[currentQuiz.settings.type.split('-')[1]]}"`;
+                     feedbackEl.textContent = `Sai rồi! Đáp án là "${correctWord[answerKey]}"`;
                      feedbackEl.className = 'mt-4 text-center font-semibold text-red-600';
                      currentQuiz.wrongAnswers.push({ question: correctWord, chosen: chosenAnswer });
+                     speak(correctWord.char); // Speak the correct character
                  }
 
                  currentQuiz.currentQuestionIndex++;
-                 setTimeout(displayQuizQuestion, 2000);
+                 setTimeout(displayQuizQuestion, 2500);
             }
 
             function showQuizResults() {
@@ -871,9 +964,12 @@
                     let wrongHtml = '<h4 class="font-bold mb-2">Các câu trả lời sai:</h4><ul>';
                     currentQuiz.wrongAnswers.forEach(item => {
                         const q = item.question;
-                        wrongHtml += `<li class="mb-2 p-2 bg-red-50 rounded-md">
-                            <span class="font-medium">${q.char} (${q.pinyin})</span>: ${q.meaning}. <br/>
-                            <span class="text-sm text-red-700">Bạn đã chọn: "${item.chosen}"</span>
+                        wrongHtml += `<li class="mb-2 p-2 bg-red-50 rounded-md flex justify-between items-center">
+                            <div>
+                                <span class="font-medium">${q.char} (${q.pinyin})</span>: ${q.meaning}. <br/>
+                                <span class="text-sm text-red-700">Bạn đã chọn: "${item.chosen}"</span>
+                            </div>
+                            <button class="speak-btn-modal text-sm" data-text="${q.char}">🔊</button>
                         </li>`;
                     });
                     wrongHtml += '</ul>';
@@ -883,36 +979,21 @@
                     wrongAnswersEl.innerHTML = '<p class="text-green-600">Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi.</p>';
                 }
             }
-            
-            practiceBtn.addEventListener('click', () => showModal(quizModal, quizModalContent));
-            closeQuizSetupBtn.addEventListener('click', () => hideModal(quizModal, quizModalContent));
-            startQuizBtn.addEventListener('click', setupQuiz);
-            quizCloseBtn.addEventListener('click', () => hideModal(quizModal, quizModalContent));
-            quizRestartBtn.addEventListener('click', () => {
-                quizResults.style.display = 'none';
-                quizSetup.style.display = 'block';
-            });
-            quizReviewWrongBtn.addEventListener('click', () => {
-                currentQuiz.questions = currentQuiz.wrongAnswers.map(item => item.question);
-                currentQuiz.currentQuestionIndex = 0;
-                currentQuiz.score = 0;
-                currentQuiz.wrongAnswers = [];
-                quizResults.style.display = 'none';
-                quizMain.style.display = 'block';
-                displayQuizQuestion();
-            });
-            
-            reviewBtn.addEventListener('click', () => {
-                let sourceData = getFilteredData();
-                if (sourceData.length === 0) {
-                    alert('Hãy chọn một bộ từ để ôn tập.');
+
+            // --- Review Mode Functions ---
+            function startReviewSession() {
+                const now = Date.now();
+                reviewSession.queue = vocabData
+                    .map(word => ({ ...word, progress: vocabProgress[`${word.lesson}-${word.char}`] }))
+                    .filter(word => word.progress.nextReview <= now)
+                    .sort(() => 0.5 - Math.random());
+                
+                if (reviewSession.queue.length === 0) {
+                    alert('Tuyệt vời! Bạn đã ôn tập hết các từ đến hạn. Hãy quay lại sau nhé.');
                     return;
                 }
-                reviewSession.queue = [...sourceData].sort(() => 0.5 - Math.random());
-                startReviewSession();
-            });
 
-            function startReviewSession() {
+                reviewSession.total = reviewSession.queue.length;
                 reviewDifficultyButtons.classList.add('hidden');
                 reviewCardContainer.querySelector('.flashcard').classList.remove('is-flipped');
                 showModal(reviewModal, reviewModalContent);
@@ -920,48 +1001,136 @@
             }
 
             function nextReviewWord() {
+                const now = Date.now();
+                const dueCount = vocabData.filter(word => vocabProgress[`${word.lesson}-${word.char}`].nextReview <= now).length;
+                document.getElementById('review-queue-info').textContent = `Có ${dueCount} từ đến hạn ôn tập.`;
+
+
                  if(reviewSession.queue.length === 0) {
                     alert('Hoàn thành phiên ôn tập!');
                     hideModal(reviewModal, reviewModalContent);
+                    filterAndRender(); // Update grid with new SRS status
                     return;
                  }
-                 document.getElementById('review-progress').textContent = `Còn lại: ${reviewSession.queue.length} từ`;
+                 
+                 document.getElementById('review-progress').textContent = `${reviewSession.total - reviewSession.queue.length + 1} / ${reviewSession.total}`;
                  reviewDifficultyButtons.classList.add('hidden');
-                 reviewCardContainer.querySelector('.flashcard').classList.remove('is-flipped');
+                 
+                 const flashcard = reviewCardContainer.querySelector('.flashcard');
+                 if (flashcard.classList.contains('is-flipped')) {
+                    flashcard.classList.remove('is-flipped');
+                 }
 
                  reviewSession.currentWord = reviewSession.queue.shift();
                  const word = reviewSession.currentWord;
-                 document.getElementById('review-card-front').innerHTML = `<span class="text-5xl font-semibold">${word.char}</span>`;
-                 document.getElementById('review-card-back').innerHTML = `
-                        <p class="text-3xl font-semibold">${word.char}</p>
-                        <p class="text-xl mt-2">${word.pinyin}</p>
-                        <p class="mt-2 text-lg text-center">${word.meaning}</p>
-                 `;
+                 
+                 // Use a timeout to allow the card to flip back before changing content
+                 setTimeout(() => {
+                    document.getElementById('review-card-front').innerHTML = `
+                        <span class="text-5xl font-semibold">${word.char}</span>
+                        <button class="speak-btn-modal" data-text="${word.char}">🔊</button>
+                    `;
+                    document.getElementById('review-card-back').innerHTML = `
+                        <div class="text-center">
+                            <p class="text-3xl font-semibold">${word.char}</p>
+                            <p class="text-xl mt-2">${word.pinyin}</p>
+                            <p class="mt-2 text-lg">${word.meaning}</p>
+                        </div>
+                        <button class="speak-btn" data-text="${word.char}">🔊</button>
+                    `;
+                 }, 300); // 300ms is half of the flip animation
+            }
+            
+            function handleReviewDifficulty(difficulty) {
+                const word = reviewSession.currentWord;
+                const wordKey = `${word.lesson}-${word.char}`;
+                let progress = vocabProgress[wordKey];
+                let currentLevel = progress.level;
+
+                if (difficulty === 1) { // Hard
+                    progress.level = 0; // Reset level
+                    // Re-insert into the queue to be seen again soon
+                    reviewSession.queue.splice(1, 0, reviewSession.currentWord);
+                } else if (difficulty === 2) { // Medium
+                    progress.level = Math.max(1, currentLevel); // Ensure it's at least level 1
+                    // Re-insert halfway through the remaining queue
+                    reviewSession.queue.splice(Math.floor(reviewSession.queue.length / 2), 0, reviewSession.currentWord);
+                } else { // Easy
+                    progress.level = currentLevel + 1;
+                }
+                
+                // Set next review date only if it's not being reviewed again in this session
+                if (difficulty === 3) {
+                    const intervalSeconds = srsIntervals[Math.min(progress.level - 1, srsIntervals.length - 1)];
+                    progress.nextReview = Date.now() + intervalSeconds * 1000;
+                } else {
+                    // For hard/medium, it will be reviewed again in this session, so don't update nextReview yet.
+                    // It will get a new nextReview time when it's marked "Easy" later.
+                }
+
+                saveProgress();
+                nextReviewWord();
             }
 
-            reviewCardContainer.addEventListener('click', () => {
-                reviewCardContainer.querySelector('.flashcard').classList.add('is-flipped');
-                reviewDifficultyButtons.classList.remove('hidden');
-            });
-            
-            reviewDifficultyButtons.addEventListener('click', (e) => {
-                if(e.target.matches('.btn-difficulty')) {
-                    const difficulty = parseInt(e.target.dataset.difficulty);
-                    if (difficulty === 1) { 
-                        reviewSession.queue.splice(1, 0, reviewSession.currentWord);
-                    } else if (difficulty === 2) { 
-                        reviewSession.queue.splice(Math.floor(reviewSession.queue.length / 2), 0, reviewSession.currentWord);
+            // --- Event Listeners ---
+            function setupEventListeners() {
+                lessonFilter.addEventListener('change', filterAndRender);
+                srsFilter.addEventListener('change', filterAndRender);
+                searchInput.addEventListener('input', filterAndRender);
+                
+                document.body.addEventListener('click', function(e) {
+                    if (e.target.matches('.speak-btn') || e.target.matches('.speak-btn-modal')) {
+                        e.stopPropagation();
+                        const textToSpeak = e.target.getAttribute('data-text');
+                        if (textToSpeak) speak(textToSpeak);
                     }
-                    nextReviewWord();
-                }
-            });
+                });
 
-            reviewCloseBtn.addEventListener('click', () => hideModal(reviewModal, reviewModalContent));
-            
-            // Initial Setup
-            lessonFilter.addEventListener('change', filterAndRender);
-            searchInput.addEventListener('input', filterAndRender);
-            filterAndRender();
+                practiceBtn.addEventListener('click', () => showModal(quizModal, quizModalContent));
+                closeQuizSetupBtn.addEventListener('click', () => hideModal(quizModal, quizModalContent));
+                startQuizBtn.addEventListener('click', setupQuiz);
+                quizCloseBtn.addEventListener('click', () => hideModal(quizModal, quizModalContent));
+                quizRestartBtn.addEventListener('click', () => {
+                    quizResults.style.display = 'none';
+                    quizSetup.style.display = 'block';
+                });
+                quizReviewWrongBtn.addEventListener('click', () => {
+                    currentQuiz.questions = currentQuiz.wrongAnswers.map(item => item.question);
+                    currentQuiz.currentQuestionIndex = 0;
+                    currentQuiz.score = 0;
+                    currentQuiz.wrongAnswers = [];
+                    quizResults.style.display = 'none';
+                    quizMain.style.display = 'block';
+                    displayQuizQuestion();
+                });
+
+                reviewBtn.addEventListener('click', startReviewSession);
+                reviewCloseBtn.addEventListener('click', () => {
+                    hideModal(reviewModal, reviewModalContent);
+                    filterAndRender(); // Update grid in case something changed
+                });
+                reviewCardContainer.addEventListener('click', (e) => {
+                    if (e.target.closest('.speak-btn-modal') || e.target.closest('.speak-btn')) return;
+                    reviewCardContainer.querySelector('.flashcard').classList.add('is-flipped');
+                    reviewDifficultyButtons.classList.remove('hidden');
+                });
+                reviewDifficultyButtons.addEventListener('click', (e) => {
+                    if(e.target.matches('.btn-difficulty')) {
+                        const difficulty = parseInt(e.target.dataset.difficulty);
+                        handleReviewDifficulty(difficulty);
+                    }
+                });
+            }
+
+            // --- Initial Setup ---
+            function init() {
+                loadProgress();
+                populateFilters();
+                setupEventListeners();
+                filterAndRender();
+            }
+
+            init();
         });
     </script>
 </body>
