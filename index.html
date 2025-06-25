@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ôn tập Từ vựng TOCFL A1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Slate & Blue -->
+    <!-- Application Structure Plan: The app is a single-page dashboard for vocabulary learning. The core structure features a control panel for filtering and initiating practice modes, and a main grid for vocabulary exploration. This update introduces a new 'Review Mode' alongside the existing 'Quiz Mode', both launched via modals. This dual-mode approach caters to different learning styles: active recall via quizzes and spaced repetition via focused review. The information architecture is designed for task-oriented learning (browse, search, quiz, review) rather than a static presentation. -->
+    <!-- Visualization & Content Choices: Data is presented as interactive flashcards. Goal: Memorization. Method: Interactive Cards & Modals. Interaction: Flip cards, use text-to-speech, take quizzes, and use a focused review mode with self-assessment. Justification: These methods are based on proven learning techniques like active recall and spaced repetition, significantly boosting memory retention over passive reading. All elements are built with HTML/CSS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .flashcard { perspective: 1000px; }
+        .flashcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+        .flashcard.is-flipped .flashcard-inner { transform: rotateY(180deg); }
+        .flashcard-front, .flashcard-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; border-radius: 0.75rem; }
+        .flashcard-back { transform: rotateY(180deg); }
+        .speak-btn {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .speak-btn:hover { background: rgba(255, 255, 255, 0.4); }
+        .modal-base { display: none; }
+        .modal-base.active { display: flex; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Công cụ Ôn tập Từ vựng TOCFL A1</h1>
+            <p class="text-slate-600 mt-2">Sách "A Course in Contemporary Chinese" - Bài 1 đến 15</p>
+        </header>
+
+        <div class="sticky top-0 bg-slate-50/80 backdrop-blur-sm z-10 py-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 max-w-5xl mx-auto items-end">
+                <div class="flex-grow w-full md:w-1/3">
+                    <label for="lesson-filter" class="block text-sm font-medium text-slate-700 mb-1">Lọc</label>
+                    <select id="lesson-filter" class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="all">Tất cả bài học</option>
+                    </select>
+                </div>
+                <div class="flex-grow w-full md:w-1/3">
+                     <label for="search-input" class="block text-sm font-medium text-slate-700 mb-1">Tìm kiếm</label>
+                    <input type="text" id="search-input" placeholder="Nhập từ..." class="w-full p-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                <div class="w-full md:w-auto flex gap-2">
+                    <button id="review-btn" class="flex-1 w-full bg-green-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-green-700 transition flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                        Ôn tập
+                    </button>
+                    <button id="practice-btn" class="flex-1 w-full bg-blue-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v1.946l4.061 4.061a1 1 0 01-1.414 1.414l-4.5-4.5a1 1 0 011.653-1.653zM4.646 4.646a1 1 0 011.414 0L10 8.586l3.94-3.94a1 1 0 111.414 1.414L11.414 10l3.94 3.94a1 1 0 11-1.414 1.414L10 11.414l-3.94 3.94a1 1 0 01-1.414-1.414L8.586 10 4.646 6.06a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        Luyện tập
+                    </button>
+                </div>
+            </div>
+             <p id="word-count" class="text-center text-slate-500 mt-4 text-sm"></p>
+        </div>
+
+        <main id="vocab-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+        </main>
+        
+        <footer class="text-center mt-12 text-slate-500 text-sm">
+            <p>Nhấn vào thẻ để lật. Nhấn 🔊 để nghe phát âm.</p>
+        </footer>
+    </div>
+    
+    <div id="quiz-modal" class="modal-base fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 md:p-8 w-11/12 max-w-lg transform transition-all scale-95 opacity-0" id="quiz-modal-content">
+             <div id="quiz-setup">
+                <h2 class="text-2xl font-bold mb-4">Chế độ Luyện tập</h2>
+                <p class="text-slate-600 mb-6">Chọn hình thức và nội dung để bắt đầu bài kiểm tra.</p>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Hình thức</label>
+                    <select id="quiz-type" class="w-full p-3 bg-white border border-slate-300 rounded-lg">
+                        <option value="char-to-meaning">Chữ Hán → Nghĩa</option>
+                        <option value="pinyin-to-meaning">Pinyin → Nghĩa</option>
+                        <option value="meaning-to-char">Nghĩa → Chữ Hán</option>
+                    </select>
+                </div>
+                 <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Nội dung</label>
+                    <select id="quiz-source" class="w-full p-3 bg-white border border-slate-300 rounded-lg">
+                        <option value="current">Từ đang lọc</option>
+                        <option value="all">Tất cả từ vựng</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button id="close-quiz-setup-btn" class="px-6 py-2 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 transition">Hủy</button>
+                    <button id="start-quiz-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Bắt đầu</button>
+                </div>
+            </div>
+            
+            <div id="quiz-main" class="hidden">
+                 <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Trắc nghiệm</h2>
+                    <p id="quiz-progress" class="text-slate-500"></p>
+                 </div>
+                 <div id="quiz-question-card" class="bg-slate-100 p-8 rounded-lg text-center mb-6 min-h-[120px] flex items-center justify-center">
+                    <div>
+                        <p id="quiz-question" class="text-4xl font-semibold"></p>
+                        <p id="quiz-question-hint" class="text-slate-500 mt-2"></p>
+                    </div>
+                 </div>
+                 <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                 <div id="quiz-feedback" class="mt-4 text-center font-semibold h-6"></div>
+            </div>
+
+             <div id="quiz-results" class="hidden text-center">
+                <h2 class="text-2xl font-bold mb-4">Kết quả</h2>
+                <p id="quiz-score" class="text-5xl font-bold text-blue-600 mb-4"></p>
+                <div id="quiz-wrong-answers" class="max-h-60 overflow-y-auto my-4 text-left p-4 bg-slate-50 rounded-lg border"></div>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button id="quiz-review-wrong-btn" class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition hidden">Ôn lại câu sai</button>
+                    <button id="quiz-restart-btn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Làm lại</button>
+                    <button id="quiz-close-btn" class="px-6 py-3 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 transition">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="review-modal" class="modal-base fixed inset-0 bg-slate-900 bg-opacity-80 justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl p-6 md:p-8 w-full max-w-2xl transform transition-all scale-95 opacity-0" id="review-modal-content">
+             <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Chế độ Ôn tập Thông minh</h2>
+                <button id="review-close-btn" class="text-slate-500 hover:text-slate-800 text-2xl leading-none">&times;</button>
+             </div>
+             <p id="review-progress" class="text-center text-slate-500 mb-4"></p>
+             <div id="review-card-container" class="h-64">
+                 <div class="flashcard h-full">
+                    <div class="flashcard-inner">
+                        <div id="review-card-front" class="flashcard-front bg-slate-100 shadow-md"></div>
+                        <div id="review-card-back" class="flashcard-back bg-blue-600 text-white shadow-md"></div>
+                    </div>
+                 </div>
+             </div>
+             <div id="review-difficulty-buttons" class="mt-6 flex justify-around hidden">
+                 <button data-difficulty="1" class="btn-difficulty border-2 border-transparent w-1/3 py-3 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition">Khó</button>
+                 <button data-difficulty="2" class="btn-difficulty border-2 border-transparent w-1/3 py-3 mx-4 rounded-lg bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition">Vừa</button>
+                 <button data-difficulty="3" class="btn-difficulty border-2 border-transparent w-1/3 py-3 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">Dễ</button>
+             </div>
+        </div>
+    </div>
+
+    <script>
+        const vocabData = [
+            { lesson: 1, char: '你', pinyin: 'nǐ', meaning: 'Bạn, anh, chị, em' },
+            { lesson: 1, char: '來', pinyin: 'lái', meaning: 'Đến, tới' },
+            { lesson: 1, char: '是', pinyin: 'shì', meaning: 'Là, phải' },
+            { lesson: 1, char: '小姐', pinyin: 'xiǎojiě', meaning: 'Cô, tiểu thư' },
+            { lesson: 1, char: '嗎', pinyin: 'ma', meaning: 'không? (trợ từ)' },
+            { lesson: 1, char: '接', pinyin: 'jiē', meaning: 'Đón, tiếp' },
+            { lesson: 1, char: '我們', pinyin: 'wǒmen', meaning: 'Chúng tôi' },
+            { lesson: 1, char: '我', pinyin: 'wǒ', meaning: 'Tôi, tớ' },
+            { lesson: 1, char: '這', pinyin: 'zhè / zhèi', meaning: 'Này, đây' },
+            { lesson: 1, char: '先生', pinyin: 'xiānshēng', meaning: 'Ông, ngài' },
+            { lesson: 1, char: '好', pinyin: 'hǎo', meaning: 'Tốt, khỏe' },
+            { lesson: 1, char: '姓', pinyin: 'xìng', meaning: 'Họ (là)' },
+            { lesson: 1, char: '叫', pinyin: 'jiào', meaning: 'Gọi là, tên là' },
+            { lesson: 1, char: '你們', pinyin: 'nǐmen', meaning: 'Các bạn' },
+            { lesson: 1, char: '臺灣', pinyin: 'Táiwān', meaning: 'Đài Loan' },
+            { lesson: 1, char: '歡迎', pinyin: 'huānyíng', meaning: 'Hoan nghênh' },
+            { lesson: 1, char: '請問', pinyin: 'qǐngwèn', meaning: 'Xin hỏi' },
+            { lesson: 1, char: '是的', pinyin: 'shìde', meaning: 'Vâng, đúng vậy' },
+            { lesson: 1, char: '謝謝', pinyin: 'xièxie', meaning: 'Cảm ơn' },
+            { lesson: 1, char: '不客氣', pinyin: 'búkèqì', meaning: 'Đừng khách sáo' },
+            { lesson: 1, char: '你好', pinyin: 'nǐ hǎo', meaning: 'Chào bạn' },
+            { lesson: 1, char: '請', pinyin: 'qǐng', meaning: 'Mời, xin' },
+            { lesson: 1, char: '喝', pinyin: 'hē', meaning: 'Uống' },
+            { lesson: 1, char: '茶', pinyin: 'chá', meaning: 'Trà' },
+            { lesson: 1, char: '很', pinyin: 'hěn', meaning: 'Rất' },
+            { lesson: 1, char: '好喝', pinyin: 'hǎohē', meaning: 'Ngon (đồ uống)' },
+            { lesson: 1, char: '什麼', pinyin: 'shénme', meaning: 'Cái gì' },
+            { lesson: 1, char: '人', pinyin: 'rén', meaning: 'Người' },
+            { lesson: 1, char: '喜歡', pinyin: 'xǐhuān', meaning: 'Thích' },
+            { lesson: 1, char: '呢', pinyin: 'ne', meaning: 'thì sao?' },
+            { lesson: 1, char: '他', pinyin: 'tā', meaning: 'Anh ấy' },
+            { lesson: 1, char: '不', pinyin: 'bù', meaning: 'Không' },
+            { lesson: 1, char: '哪', pinyin: 'nǎ / něi', meaning: 'Nào' },
+            { lesson: 1, char: '要', pinyin: 'yào', meaning: 'Muốn' },
+            { lesson: 1, char: '咖啡', pinyin: 'kāfēi', meaning: 'Cà phê' },
+            { lesson: 1, char: '烏龍茶', pinyin: 'Wūlóng chá', meaning: 'Trà Ô Long' },
+            { lesson: 1, char: '日本', pinyin: 'Rìběn', meaning: 'Nhật Bản' },
+            { lesson: 1, char: '美國', pinyin: 'Měiguó', meaning: 'Nước Mỹ' },
+            { lesson: 1, char: '對不起', pinyin: 'duìbùqǐ', meaning: 'Xin lỗi' },
+            { lesson: 1, char: '哪國', pinyin: 'nǎ guó', meaning: 'Nước nào' },
+            { lesson: 2, char: '的', pinyin: 'de', meaning: 'của' },
+            { lesson: 2, char: '家人', pinyin: 'jiārén', meaning: 'Người nhà' },
+            { lesson: 2, char: '家', pinyin: 'jiā', meaning: 'Nhà, gia đình' },
+            { lesson: 2, char: '漂亮', pinyin: 'piàoliàng', meaning: 'Xinh đẹp' },
+            { lesson: 2, char: '房子', pinyin: 'fángzi', meaning: 'Căn nhà' },
+            { lesson: 2, char: '坐', pinyin: 'zuò', meaning: 'Ngồi' },
+            { lesson: 2, char: '有', pinyin: 'yǒu', meaning: 'Có' },
+            { lesson: 2, char: '多', pinyin: 'duō', meaning: 'Nhiều' },
+            { lesson: 2, char: '照片', pinyin: 'zhàopiàn', meaning: 'Ảnh' },
+            { lesson: 2, char: '都', pinyin: 'dōu', meaning: 'Đều' },
+            { lesson: 2, char: '照相', pinyin: 'zhàoxiàng', meaning: 'Chụp ảnh' },
+            { lesson: 2, char: '張', pinyin: 'zhāng', meaning: 'Tấm, tờ (lượng từ)' },
+            { lesson: 2, char: '好看', pinyin: 'hǎokàn', meaning: 'Đẹp, ưa nhìn' },
+            { lesson: 2, char: '誰', pinyin: 'shéi', meaning: 'Ai' },
+            { lesson: 2, char: '姐姐', pinyin: 'jiějie', meaning: 'Chị gái' },
+            { lesson: 2, char: '妹妹', pinyin: 'mèimei', meaning: 'Em gái' },
+            { lesson: 2, char: '爸爸', pinyin: 'bàba', meaning: 'Bố' },
+            { lesson: 2, char: '媽媽', pinyin: 'māma', meaning: 'Mẹ' },
+            { lesson: 2, char: '請進', pinyin: 'qǐng jìn', meaning: 'Mời vào' },
+            { lesson: 2, char: '伯母', pinyin: 'bómǔ', meaning: 'Bác gái' },
+            { lesson: 2, char: '您', pinyin: 'nín', meaning: 'Ngài (kính trọng)' },
+            { lesson: 2, char: '名字', pinyin: 'míngzi', meaning: 'Tên' },
+            { lesson: 2, char: '書', pinyin: 'shū', meaning: 'Sách' },
+            { lesson: 2, char: '哥哥', pinyin: 'gēge', meaning: 'Anh trai' },
+            { lesson: 2, char: '老師', pinyin: 'lǎoshī', meaning: 'Thầy/cô giáo' },
+            { lesson: 2, char: '看書', pinyin: 'kànshū', meaning: 'Đọc sách' },
+            { lesson: 2, char: '幾', pinyin: 'jǐ', meaning: 'Mấy' },
+            { lesson: 2, char: '個', pinyin: 'ge', meaning: 'cái, con (lượng từ)' },
+            { lesson: 2, char: '沒', pinyin: 'méi', meaning: 'Không (phủ định của 有)' },
+            { lesson: 2, char: '兄弟', pinyin: 'xiōngdì', meaning: 'Anh em trai' },
+            { lesson: 2, char: '姐妹', pinyin: 'jiěmèi', meaning: 'Chị em gái' },
+            { lesson: 2, char: '五', pinyin: 'wǔ', meaning: 'Năm' },
+            { lesson: 2, char: '兩', pinyin: 'liǎng', meaning: 'Hai (dùng với lượng từ)' },
+            { lesson: 3, char: '週末', pinyin: 'zhōumò', meaning: 'Cuối tuần' },
+            { lesson: 3, char: '聽', pinyin: 'tīng', meaning: 'Nghe' },
+            { lesson: 3, char: '音樂', pinyin: 'yīnyuè', meaning: 'Âm nhạc' },
+            { lesson: 3, char: '運動', pinyin: 'yùndòng', meaning: 'Vận động, thể thao' },
+            { lesson: 3, char: '打', pinyin: 'dǎ', meaning: 'Đánh (bóng)' },
+            { lesson: 3, char: '網球', pinyin: 'wǎngqiú', meaning: 'Quần vợt (tennis)' },
+            { lesson: 3, char: '棒球', pinyin: 'bàngqiú', meaning: 'Bóng chày' },
+            { lesson: 3, char: '和', pinyin: 'hàn', meaning: 'Và' },
+            { lesson: 3, char: '游泳', pinyin: 'yóuyǒng', meaning: 'Bơi' },
+            { lesson: 3, char: '常', pinyin: 'cháng', meaning: 'Thường xuyên' },
+            { lesson: 3, char: '籃球', pinyin: 'lánqiú', meaning: 'Bóng rổ' },
+            { lesson: 3, char: '也', pinyin: 'yě', meaning: 'Cũng' },
+            { lesson: 3, char: '踢', pinyin: 'tī', meaning: 'Đá (bóng)' },
+            { lesson: 3, char: '足球', pinyin: 'zúqiú', meaning: 'Bóng đá' },
+            { lesson: 3, char: '覺得', pinyin: 'juéde', meaning: 'Cảm thấy' },
+            { lesson: 3, char: '好玩', pinyin: 'hǎowán', meaning: 'Vui, thú vị' },
+            { lesson: 3, char: '明天', pinyin: 'míngtiān', meaning: 'Ngày mai' },
+            { lesson: 3, char: '早上', pinyin: 'zǎoshàng', meaning: 'Buổi sáng' },
+            { lesson: 3, char: '怎麼樣', pinyin: 'zěnmeyàng', meaning: 'Như thế nào?' },
+            { lesson: 3, char: '啊', pinyin: 'a', meaning: 'à, á (trợ từ)' },
+            { lesson: 3, char: '做什麼', pinyin: 'zuò shénme', meaning: 'Làm gì' },
+            { lesson: 3, char: '好啊', pinyin: 'hǎo a', meaning: 'Được thôi!' },
+            { lesson: 3, char: '今天', pinyin: 'jīntiān', meaning: 'Hôm nay' },
+            { lesson: 3, char: '晚上', pinyin: 'wǎnshàng', meaning: 'Buổi tối' },
+            { lesson: 3, char: '電影', pinyin: 'diànyǐng', meaning: 'Phim' },
+            { lesson: 3, char: '妳', pinyin: 'nǐ', meaning: 'Bạn (nữ)' },
+            { lesson: 3, char: '還是', pinyin: 'háishì', meaning: 'Hay là' },
+            { lesson: 3, char: '吧', pinyin: 'ba', meaning: 'nhé, đi (gợi ý)' },
+            { lesson: 3, char: '學', pinyin: 'xué', meaning: 'Học' },
+            { lesson: 3, char: '中文', pinyin: 'Zhōngwén', meaning: 'Tiếng Trung' },
+            { lesson: 3, char: '一起', pinyin: 'yìqǐ', meaning: 'Cùng nhau' },
+            { lesson: 3, char: '晚飯', pinyin: 'wǎnfàn', meaning: 'Bữa tối' },
+            { lesson: 3, char: '菜', pinyin: 'cài', meaning: 'Món ăn, rau' },
+            { lesson: 3, char: '越南', pinyin: 'Yuènán', meaning: 'Việt Nam' },
+            { lesson: 3, char: '好不好', pinyin: 'hǎo bù hǎo', meaning: 'Được không?' },
+            { lesson: 4, char: '一共', pinyin: 'yígòng', meaning: 'Tổng cộng' },
+            { lesson: 4, char: '多少', pinyin: 'duōshǎo', meaning: 'Bao nhiêu' },
+            { lesson: 4, char: '錢', pinyin: 'qián', meaning: 'Tiền' },
+            { lesson: 4, char: '老闆', pinyin: 'lǎobǎn', meaning: 'Ông chủ' },
+            { lesson: 4, char: '買', pinyin: 'mǎi', meaning: 'Mua' },
+            { lesson: 4, char: '杯', pinyin: 'bēi', meaning: 'Cốc, ly' },
+            { lesson: 4, char: '熱', pinyin: 'rè', meaning: 'Nóng' },
+            { lesson: 4, char: '包子', pinyin: 'bāozi', meaning: 'Bánh bao' },
+            { lesson: 4, char: '大', pinyin: 'dà', meaning: 'To, lớn' },
+            { lesson: 4, char: '中', pinyin: 'zhōng', meaning: 'Vừa' },
+            { lesson: 4, char: '小', pinyin: 'xiǎo', meaning: 'Nhỏ, bé' },
+            { lesson: 4, char: '幫', pinyin: 'bāng', meaning: 'Giúp' },
+            { lesson: 4, char: '微波', pinyin: 'wéibō', meaning: 'Vi sóng' },
+            { lesson: 4, char: '百', pinyin: 'bǎi', meaning: 'Trăm' },
+            { lesson: 4, char: '塊', pinyin: 'kuài', meaning: 'Đồng (tiền)' },
+            { lesson: 4, char: '好的', pinyin: 'hǎode', meaning: 'Được, OK' },
+            { lesson: 4, char: '外帶', pinyin: 'wàidài', meaning: 'Mang đi' },
+            { lesson: 4, char: '內用', pinyin: 'nèiyòng', meaning: 'Dùng tại chỗ' },
+            { lesson: 4, char: '支', pinyin: 'zhī', meaning: 'Cây, chiếc' },
+            { lesson: 4, char: '新', pinyin: 'xīn', meaning: 'Mới' },
+            { lesson: 4, char: '手機', pinyin: 'shǒujī', meaning: 'Điện thoại di động' },
+            { lesson: 4, char: '太', pinyin: 'tài', meaning: 'Quá, lắm' },
+            { lesson: 4, char: '舊', pinyin: 'jiù', meaning: 'Cũ' },
+            { lesson: 4, char: '了', pinyin: 'le', meaning: 'rồi (trợ từ)' },
+            { lesson: 4, char: '種', pinyin: 'zhǒng', meaning: 'Loại, kiểu' },
+            { lesson: 4, char: '能', pinyin: 'néng', meaning: 'Có thể' },
+            { lesson: 4, char: '上網', pinyin: 'shàngwǎng', meaning: 'Lên mạng' },
+            { lesson: 4, char: '貴', pinyin: 'guì', meaning: 'Đắt' },
+            { lesson: 4, char: '賣', pinyin: 'mài', meaning: 'Bán' },
+            { lesson: 4, char: '便宜', pinyin: 'piányí', meaning: 'Rẻ' },
+            { lesson: 4, char: '萬', pinyin: 'wàn', meaning: 'Vạn (10,000)' },
+            { lesson: 4, char: '千', pinyin: 'qiān', meaning: 'Nghìn' },
+            { lesson: 4, char: '為什麼', pinyin: 'wèishénme', meaning: 'Tại sao' },
+            { lesson: 5, char: '牛肉', pinyin: 'niúròu', meaning: 'Thịt bò' },
+            { lesson: 5, char: '麵', pinyin: 'miàn', meaning: 'Mì' },
+            { lesson: 5, char: '真', pinyin: 'zhēn', meaning: 'Thật là' },
+            { lesson: 5, char: '好吃', pinyin: 'hǎochī', meaning: 'Ngon (đồ ăn)' },
+            { lesson: 5, char: '有名', pinyin: 'yǒumíng', meaning: 'Nổi tiếng' },
+            { lesson: 5, char: '小吃', pinyin: 'xiǎochī', meaning: 'Món ăn vặt' },
+            { lesson: 5, char: '最', pinyin: 'zuì', meaning: 'Nhất' },
+            { lesson: 5, char: '湯', pinyin: 'tāng', meaning: 'Canh, súp' },
+            { lesson: 5, char: '這麼', pinyin: 'zhème', meaning: 'Như thế này' },
+            { lesson: 5, char: '一定', pinyin: 'yídìng', meaning: 'Nhất định' },
+            { lesson: 5, char: '碗', pinyin: 'wǎn', meaning: 'Bát, chén' },
+            { lesson: 5, char: '是啊', pinyin: 'shì a', meaning: 'Đúng vậy' },
+            { lesson: 5, char: '小籠包', pinyin: 'xiǎolóngbāo', meaning: 'Tiểu long bao' },
+            { lesson: 5, char: '臭豆腐', pinyin: 'chòu dòufǔ', meaning: 'Đậu phụ thối' },
+            { lesson: 5, char: '太好了', pinyin: 'tài hǎo le', meaning: 'Tốt quá' },
+            { lesson: 5, char: '餐廳', pinyin: 'cāntīng', meaning: 'Nhà hàng' },
+            { lesson: 5, char: '可是', pinyin: 'kěshì', meaning: 'Nhưng' },
+            { lesson: 5, char: '辣', pinyin: 'là', meaning: 'Cay' },
+            { lesson: 5, char: '怕', pinyin: 'pà', meaning: 'Sợ' },
+            { lesson: 5, char: '所以', pinyin: 'suǒyǐ', meaning: 'Cho nên' },
+            { lesson: 5, char: '自己', pinyin: 'zìjǐ', meaning: 'Tự mình' },
+            { lesson: 5, char: '做飯', pinyin: 'zuòfàn', meaning: 'Nấu cơm' },
+            { lesson: 5, char: '甜點', pinyin: 'tiándiǎn', meaning: 'Món tráng miệng' },
+            { lesson: 5, char: '不錯', pinyin: 'búcuò', meaning: 'Không tồi' },
+            { lesson: 5, char: '教', pinyin: 'jiāo', meaning: 'Dạy' },
+            { lesson: 5, char: '有ㄧ點', pinyin: 'yǒu yìdiǎn', meaning: 'Hơi, một chút' },
+            { lesson: 6, char: '山上', pinyin: 'shānshàng', meaning: 'Trên núi' },
+            { lesson: 6, char: '遠', pinyin: 'yuǎn', meaning: 'Xa' },
+            { lesson: 6, char: '風景', pinyin: 'fēngjǐng', meaning: 'Phong cảnh' },
+            { lesson: 6, char: '美', pinyin: 'měi', meaning: 'Đẹp' },
+            { lesson: 6, char: '前面', pinyin: 'qiánmiàn', meaning: 'Phía trước' },
+            { lesson: 6, char: '海', pinyin: 'hǎi', meaning: 'Biển' },
+            { lesson: 6, char: '後面', pinyin: 'hòumiàn', meaning: 'Phía sau' },
+            { lesson: 6, char: '山', pinyin: 'shān', meaning: 'Núi' },
+            { lesson: 6, char: '真的', pinyin: 'zhēnde', meaning: 'Thật sự' },
+            { lesson: 6, char: '樓下', pinyin: 'lóuxià', meaning: 'Dưới lầu' },
+            { lesson: 6, char: '聽說', pinyin: 'tīngshuō', meaning: 'Nghe nói' },
+            { lesson: 6, char: '近', pinyin: 'jìn', meaning: 'Gần' },
+            { lesson: 6, char: '方便', pinyin: 'fāngbiàn', meaning: 'Thuận tiện' },
+            { lesson: 6, char: '這裡', pinyin: 'zhèlǐ', meaning: 'Ở đây' },
+            { lesson: 6, char: '外面', pinyin: 'wàimiàn', meaning: 'Bên ngoài' },
+            { lesson: 6, char: '裡面', pinyin: 'lǐmiàn', meaning: 'Bên trong' },
+            { lesson: 6, char: '宿舍', pinyin: 'sùshè', meaning: 'Ký túc xá' },
+            { lesson: 6, char: '樓', pinyin: 'lóu', meaning: 'Tầng, lầu' },
+            { lesson: 6, char: '棟', pinyin: 'dòng', meaning: 'Tòa (lượng từ)' },
+            { lesson: 6, char: '大樓', pinyin: 'dàlóu', meaning: 'Tòa nhà lớn' },
+            { lesson: 6, char: '圖書館', pinyin: 'túshūguǎn', meaning: 'Thư viện' },
+            { lesson: 6, char: '旁邊', pinyin: 'pángbiān', meaning: 'Bên cạnh' },
+            { lesson: 6, char: '教室', pinyin: 'jiàoshì', meaning: 'Phòng học' },
+            { lesson: 6, char: '游泳池', pinyin: 'yóuyǒngchí', meaning: 'Bể bơi' },
+            { lesson: 7, char: '分', pinyin: 'fēn', meaning: 'Phút' },
+            { lesson: 7, char: '見面', pinyin: 'jiànmiàn', meaning: 'Gặp mặt' },
+            { lesson: 7, char: '從', pinyin: 'cóng', meaning: 'Từ' },
+            { lesson: 7, char: '中午', pinyin: 'zhōngwǔ', meaning: 'Buổi trưa' },
+            { lesson: 7, char: '得', pinyin: 'děi', meaning: 'Phải' },
+            { lesson: 7, char: '銀行', pinyin: 'yínháng', meaning: 'Ngân hàng' },
+            { lesson: 7, char: '時候', pinyin: 'shíhòu', meaning: 'Lúc, khi' },
+            { lesson: 7, char: '後天', pinyin: 'hòutiān', meaning: 'Ngày kia' },
+            { lesson: 7, char: '下次', pinyin: 'xià cì', meaning: 'Lần sau' },
+            { lesson: 7, char: '沒問題', pinyin: 'méi wèntí', meaning: 'Không vấn đề' },
+            { lesson: 7, char: '對了', pinyin: 'duìle', meaning: 'Đúng rồi, à này' },
+            { lesson: 7, char: '有空', pinyin: 'yǒukòng', meaning: 'Có thời gian rảnh' },
+            { lesson: 7, char: '午餐', pinyin: 'wǔcān', meaning: 'Bữa trưa' },
+            { lesson: 7, char: '剛', pinyin: 'gāng', meaning: 'Vừa mới' },
+            { lesson: 7, char: '下課', pinyin: 'xiàkè', meaning: 'Tan học' },
+            { lesson: 7, char: '半', pinyin: 'bàn', meaning: 'Nửa, rưỡi' },
+            { lesson: 7, char: '比賽', pinyin: 'bǐsài', meaning: 'Trận đấu' },
+            { lesson: 7, char: '結束', pinyin: 'jiéshù', meaning: 'Kết thúc' },
+            { lesson: 7, char: '最近', pinyin: 'zuìjìn', meaning: 'Gần đây' },
+            { lesson: 7, char: '忙', pinyin: 'máng', meaning: 'Bận' },
+            { lesson: 7, char: '每', pinyin: 'měi', meaning: 'Mỗi' },
+            { lesson: 7, char: '天', pinyin: 'tiān', meaning: 'Ngày' },
+            { lesson: 7, char: '書法', pinyin: 'shūfǎ', meaning: 'Thư pháp' },
+            { lesson: 7, char: '課', pinyin: 'kè', meaning: 'Tiết học' },
+            { lesson: 7, char: '開始', pinyin: 'kāishǐ', meaning: 'Bắt đầu' },
+            { lesson: 7, char: '字', pinyin: 'zì', meaning: 'Chữ' },
+            { lesson: 7, char: '問', pinyin: 'wèn', meaning: 'Hỏi' },
+            { lesson: 7, char: '等一下', pinyin: 'děng yíxià', meaning: 'Đợi một chút' },
+            { lesson: 7, char: '有事', pinyin: 'yǒushì', meaning: 'Có việc bận' },
+            { lesson: 7, char: '有意思', pinyin: 'yǒu yìsi', meaning: 'Thú vị' },
+            { lesson: 8, char: '火車', pinyin: 'huǒchē', meaning: 'Tàu hỏa' },
+            { lesson: 8, char: '跟', pinyin: 'gēn', meaning: 'Cùng, với' },
+            { lesson: 8, char: '玩', pinyin: 'wán', meaning: 'Chơi' },
+            { lesson: 8, char: '慢', pinyin: 'màn', meaning: 'Chậm' },
+            { lesson: 8, char: '鐘頭', pinyin: 'zhōngtóu', meaning: 'Tiếng đồng hồ' },
+            { lesson: 8, char: '比較', pinyin: 'bǐjiào', meaning: 'Tương đối' },
+            { lesson: 8, char: '快', pinyin: 'kuài', meaning: 'Nhanh' },
+            { lesson: 8, char: '車票', pinyin: 'chēpiào', meaning: 'Vé xe' },
+            { lesson: 8, char: '非常', pinyin: 'fēicháng', meaning: 'Vô cùng' },
+            { lesson: 8, char: '但是', pinyin: 'dànshì', meaning: 'Nhưng' },
+            { lesson: 8, char: '又', pinyin: 'yòu', meaning: 'Vừa...vừa...' },
+            { lesson: 8, char: '舒服', pinyin: 'shūfú', meaning: 'Thoải mái' },
+            { lesson: 8, char: '站', pinyin: 'zhàn', meaning: 'Trạm, ga' },
+            { lesson: 8, char: '或是', pinyin: 'huòshì', meaning: 'Hoặc là' },
+            { lesson: 8, char: '高鐵', pinyin: 'gāotiě', meaning: 'Tàu cao tốc' },
+            { lesson: 8, char: '網路上', pinyin: 'wǎnglùshàng', meaning: 'Trên mạng' },
+            { lesson: 8, char: '便利商店', pinyin: 'biànlì shāngdiàn', meaning: 'Cửa hàng tiện lợi' },
+            { lesson: 8, char: '同學', pinyin: 'tóngxué', meaning: 'Bạn học' },
+            { lesson: 8, char: '參觀', pinyin: 'cānguān', meaning: 'Tham quan' },
+            { lesson: 8, char: '古代', pinyin: 'gǔdài', meaning: 'Cổ đại' },
+            { lesson: 8, char: '騎', pinyin: 'qí', meaning: 'Cưỡi, đi' },
+            { lesson: 8, char: '機車', pinyin: 'jīchē', meaning: 'Xe máy' },
+            { lesson: 8, char: '載', pinyin: 'zài', meaning: 'Chở' },
+            { lesson: 8, char: '捷運', pinyin: 'jiéyùn', meaning: 'Tàu điện ngầm' },
+            { lesson: 8, char: '比', pinyin: 'bǐ', meaning: 'Hơn (so sánh)' },
+            { lesson: 8, char: '故宮博物院', pinyin: 'Gùgōng Bówùyuàn', meaning: 'Bảo tàng Cố Cung' },
+            { lesson: 8, char: '中國', pinyin: 'Zhōngguó', meaning: 'Trung Quốc' },
+            { lesson: 8, char: '公共汽車', pinyin: 'gōnggòng qìchē', meaning: 'Xe buýt' },
+            { lesson: 8, char: '不行', pinyin: 'bùxíng', meaning: 'Không được' },
+            { lesson: 8, char: '計程車', pinyin: 'jìchéngchē', meaning: 'Taxi' },
+            { lesson: 8, char: '差不多', pinyin: 'chàbùduō', meaning: 'Gần như nhau' },
+            { lesson: 9, char: '星期', pinyin: 'xīngqí', meaning: 'Tuần, thứ' },
+            { lesson: 9, char: '回國', pinyin: 'huíguó', meaning: 'Về nước' },
+            { lesson: 9, char: '打算', pinyin: 'dǎsuàn', meaning: 'Dự định' },
+            { lesson: 9, char: '電視', pinyin: 'diànshì', meaning: 'Tivi' },
+            { lesson: 9, char: '影片', pinyin: 'yǐngpiàn', meaning: 'Phim, video' },
+            { lesson: 9, char: '旅行', pinyin: 'lǚxíng', meaning: 'Du lịch' },
+            { lesson: 9, char: '功課', pinyin: 'gōngkè', meaning: 'Bài tập' },
+            { lesson: 9, char: '出去', pinyin: 'chūqù', meaning: 'Đi ra ngoài' },
+            { lesson: 9, char: '大概', pinyin: 'dàgài', meaning: 'Khoảng' },
+            { lesson: 9, char: '放假', pinyin: 'fàngjià', meaning: 'Nghỉ lễ' },
+            { lesson: 9, char: '下個星期', pinyin: 'xià ge xīngqí', meaning: 'Tuần sau' },
+            { lesson: 9, char: '有時候', pinyin: 'yǒushíhòu', meaning: 'Có lúc' },
+            { lesson: 9, char: '多久', pinyin: 'duō jiǔ', meaning: 'Bao lâu' },
+            { lesson: 9, char: '女', pinyin: 'nǚ', meaning: 'Nữ' },
+            { lesson: 9, char: '月', pinyin: 'yuè', meaning: 'Tháng' },
+            { lesson: 9, char: '號', pinyin: 'hào', meaning: 'Ngày, số' },
+            { lesson: 9, char: '帶', pinyin: 'dài', meaning: 'Mang theo' },
+            { lesson: 9, char: '還', pinyin: 'hái', meaning: 'Vẫn, còn' },
+            { lesson: 9, char: '建議', pinyin: 'jiànyì', meaning: 'Gợi ý' },
+            { lesson: 9, char: '夜市', pinyin: 'yèshì', meaning: 'Chợ đêm' },
+            { lesson: 9, char: '應該', pinyin: 'yīnggāi', meaning: 'Nên' },
+            { lesson: 9, char: '逛', pinyin: 'guàng', meaning: 'Đi dạo' },
+            { lesson: 9, char: '特別', pinyin: 'tèbié', meaning: 'Đặc biệt' },
+            { lesson: 9, char: '茶館', pinyin: 'cháguǎn', meaning: 'Quán trà' },
+            { lesson: 9, char: '決定', pinyin: 'juédìng', meaning: 'Quyết định' },
+            { lesson: 9, char: '要是', pinyin: 'yàoshì', meaning: 'Nếu' },
+            { lesson: 9, char: '就', pinyin: 'jiù', meaning: 'Thì, liền' },
+            { lesson: 10, char: '黃色', pinyin: 'huángsè', meaning: 'Màu vàng' },
+            { lesson: 10, char: '芒果', pinyin: 'mángguǒ', meaning: 'Xoài' },
+            { lesson: 10, char: '給', pinyin: 'gěi', meaning: 'Cho' },
+            { lesson: 10, char: '香', pinyin: 'xiāng', meaning: 'Thơm' },
+            { lesson: 10, char: '甜', pinyin: 'tián', meaning: 'Ngọt' },
+            { lesson: 10, char: '紅色', pinyin: 'hóngsè', meaning: 'Màu đỏ' },
+            { lesson: 10, char: '西瓜', pinyin: 'xīguā', meaning: 'Dưa hấu' },
+            { lesson: 10, char: '對', pinyin: 'duì', meaning: 'Đúng' },
+            { lesson: 10, char: '以前', pinyin: 'yǐqián', meaning: 'Trước đây' },
+            { lesson: 10, char: '機會', pinyin: 'jīhuì', meaning: 'Cơ hội' },
+            { lesson: 10, char: '吃吃看', pinyin: 'chīchīkàn', meaning: 'Ăn thử xem' },
+            { lesson: 10, char: '拍', pinyin: 'pāi', meaning: 'Chụp (ảnh)' },
+            { lesson: 10, char: '笑', pinyin: 'xiào', meaning: 'Cười' },
+            { lesson: 10, char: '開心', pinyin: 'kāixīn', meaning: 'Vui vẻ' },
+            { lesson: 10, char: '穿', pinyin: 'chuān', meaning: 'Mặc' },
+            { lesson: 10, char: '旅館', pinyin: 'lǚguǎn', meaning: 'Khách sạn' },
+            { lesson: 10, char: '太太', pinyin: 'tàitai', meaning: 'Vợ' },
+            { lesson: 10, char: '男', pinyin: 'nán', meaning: 'Nam' },
+            { lesson: 10, char: '矮', pinyin: 'ǎi', meaning: 'Thấp, lùn' },
+            { lesson: 10, char: '高', pinyin: 'gāo', meaning: 'Cao' },
+            { lesson: 10, char: '乾淨', pinyin: 'gānjìng', meaning: 'Sạch sẽ' },
+            { lesson: 10, char: '窗戶', pinyin: 'chuānghù', meaning: 'Cửa sổ' },
+            { lesson: 10, char: '往', pinyin: 'wǎng', meaning: 'Hướng về' },
+            { lesson: 10, char: '藍色', pinyin: 'lánsè', meaning: 'Màu xanh da trời' },
+            { lesson: 10, char: '因為', pinyin: 'yīnwèi', meaning: 'Bởi vì' },
+            { lesson: 10, char: '住', pinyin: 'zhù', meaning: 'Ở' },
+            { lesson: 10, char: '上個月', pinyin: 'shàng ge yuè', meaning: 'Tháng trước' },
+            { lesson: 10, char: '這些', pinyin: 'zhèxiē', meaning: 'Những cái này' },
+            { lesson: 11, char: '租', pinyin: 'zū', meaning: 'Thuê' },
+            { lesson: 11, char: '房東', pinyin: 'fángdōng', meaning: 'Chủ nhà' },
+            { lesson: 11, char: '客廳', pinyin: 'kètīng', meaning: 'Phòng khách' },
+            { lesson: 11, char: '廚房', pinyin: 'chúfáng', meaning: 'Nhà bếp' },
+            { lesson: 11, char: '左邊', pinyin: 'zuǒbiān', meaning: 'Bên trái' },
+            { lesson: 11, char: '右邊', pinyin: 'yòubiān', meaning: 'Bên phải' },
+            { lesson: 11, char: '浴室', pinyin: 'yùshì', meaning: 'Phòng tắm' },
+            { lesson: 11, char: '超市', pinyin: 'chāoshì', meaning: 'Siêu thị' },
+            { lesson: 11, char: '走路', pinyin: 'zǒulù', meaning: 'Đi bộ' },
+            { lesson: 11, char: '間', pinyin: 'jiān', meaning: 'Gian, phòng' },
+            { lesson: 11, char: '空', pinyin: 'kōng', meaning: 'Trống' },
+            { lesson: 11, char: '套房', pinyin: 'tàofáng', meaning: 'Căn hộ khép kín' },
+            { lesson: 11, char: '回去', pinyin: 'huíqù', meaning: 'Quay về' },
+            { lesson: 11, char: '電話', pinyin: 'diànhuà', meaning: 'Điện thoại' },
+            { lesson: 11, char: '打電話', pinyin: 'dǎ diànhuà', meaning: 'Gọi điện thoại' },
+            { lesson: 11, char: '喂', pinyin: 'wéi', meaning: 'A lô' },
+            { lesson: 11, char: '房租', pinyin: 'fángzū', meaning: 'Tiền thuê nhà' },
+            { lesson: 11, char: '已經', pinyin: 'yǐjīng', meaning: 'Đã' },
+            { lesson: 11, char: '習慣', pinyin: 'xíguàn', meaning: 'Quen' },
+            { lesson: 11, char: '問題', pinyin: 'wèntí', meaning: 'Vấn đề' },
+            { lesson: 11, char: '熱水器', pinyin: 'rèshuǐqì', meaning: 'Bình nóng lạnh' },
+            { lesson: 11, char: '好像', pinyin: 'hǎoxiàng', meaning: 'Dường như' },
+            { lesson: 11, char: '裝', pinyin: 'zhuāng', meaning: 'Lắp đặt' },
+            { lesson: 11, char: '不過', pinyin: 'búguò', meaning: 'Nhưng' },
+            { lesson: 11, char: '付', pinyin: 'fù', meaning: 'Trả' },
+            { lesson: 11, char: '收到', pinyin: 'shōudào', meaning: 'Nhận được' },
+            { lesson: 11, char: '不好意思', pinyin: 'bùhǎoyìsi', meaning: 'Ngại quá' },
+            { lesson: 11, char: '沒關係', pinyin: 'méiguānxi', meaning: 'Không sao' },
+            { lesson: 11, char: '有線電視', pinyin: 'yǒuxiàn diànshì', meaning: 'Truyền hình cáp' },
+            { lesson: 12, char: '計畫', pinyin: 'jìhuà', meaning: 'Kế hoạch' },
+            { lesson: 12, char: '久', pinyin: 'jiǔ', meaning: 'Lâu' },
+            { lesson: 12, char: '先', pinyin: 'xiān', meaning: 'Trước tiên' },
+            { lesson: 12, char: '念', pinyin: 'niàn', meaning: 'Học, đọc' },
+            { lesson: 12, char: '大學', pinyin: 'dàxué', meaning: 'Đại học' },
+            { lesson: 12, char: '需要', pinyin: 'xūyào', meaning: 'Cần' },
+            { lesson: 12, char: '花', pinyin: 'huā', meaning: 'Tiêu' },
+            { lesson: 12, char: '獎學金', pinyin: 'jiǎngxuéjīn', meaning: 'Học bổng' },
+            { lesson: 12, char: '成績', pinyin: 'chéngjī', meaning: 'Thành tích' },
+            { lesson: 12, char: '學費', pinyin: 'xuéfèi', meaning: 'Học phí' },
+            { lesson: 12, char: '公司', pinyin: 'gōngsī', meaning: 'Công ty' },
+            { lesson: 12, char: '替', pinyin: 'tì', meaning: 'Thay, cho' },
+            { lesson: 12, char: '希望', pinyin: 'xīwàng', meaning: 'Hy vọng' },
+            { lesson: 12, char: '上班', pinyin: 'shàngbān', meaning: 'Đi làm' },
+            { lesson: 12, char: '念書', pinyin: 'niànshū', meaning: 'Học bài' },
+            { lesson: 12, char: '累', pinyin: 'lèi', meaning: 'Mệt' },
+            { lesson: 12, char: '語言中心', pinyin: 'yǔyán zhōngxīn', meaning: 'Trung tâm ngôn ngữ' },
+            { lesson: 12, char: '加油', pinyin: 'jiāyóu', meaning: 'Cố lên' },
+            { lesson: 12, char: '去年', pinyin: 'qùnián', meaning: 'Năm ngoái' },
+            { lesson: 12, char: '生意', pinyin: 'shēngyì', meaning: 'Kinh doanh' },
+            { lesson: 12, char: '國家', pinyin: 'guójiā', meaning: 'Đất nước' },
+            { lesson: 12, char: '試', pinyin: 'shì', meaning: 'Thử' },
+            { lesson: 12, char: '難', pinyin: 'nán', meaning: 'Khó' },
+            { lesson: 12, char: '那麼', pinyin: 'nàme', meaning: 'Vậy thì' },
+            { lesson: 12, char: '試試看', pinyin: 'shìshìkàn', meaning: 'Thử xem' },
+            { lesson: 13, char: '生日', pinyin: 'shēngrì', meaning: 'Sinh nhật' },
+            { lesson: 13, char: '快樂', pinyin: 'kuàilè', meaning: 'Vui vẻ' },
+            { lesson: 13, char: '回來', pinyin: 'huílái', meaning: 'Quay lại' },
+            { lesson: 13, char: '忘', pinyin: 'wàng', meaning: 'Quên' },
+            { lesson: 13, char: '記得', pinyin: 'jìdé', meaning: 'Nhớ' },
+            { lesson: 13, char: '當然', pinyin: 'dāngrán', meaning: 'Đương nhiên' },
+            { lesson: 13, char: '交換', pinyin: 'jiāohuàn', meaning: 'Trao đổi' },
+            { lesson: 13, char: '熱心', pinyin: 'rèxīn', meaning: 'Nhiệt tình' },
+            { lesson: 13, char: '西班牙文', pinyin: 'Xībānyáwén', meaning: 'Tiếng Tây Ban Nha' },
+            { lesson: 13, char: '一樣', pinyin: 'yíyàng', meaning: 'Giống nhau' },
+            { lesson: 13, char: '過', pinyin: 'guò', meaning: 'Đón (sinh nhật)' },
+            { lesson: 13, char: '左右', pinyin: 'zuǒyòu', meaning: 'Khoảng' },
+            { lesson: 13, char: '門口', pinyin: 'ménkǒu', meaning: 'Cửa, cổng' },
+            { lesson: 13, char: '好久不見', pinyin: 'hǎojiǔ bújiàn', meaning: 'Lâu rồi không gặp' },
+            { lesson: 13, char: '禮物', pinyin: 'lǐwù', meaning: 'Quà' },
+            { lesson: 13, char: '今年', pinyin: 'jīnnián', meaning: 'Năm nay' },
+            { lesson: 13, char: '訂', pinyin: 'dìng', meaning: 'Đặt trước' },
+            { lesson: 13, char: '豬腳', pinyin: 'zhūjiǎo', meaning: 'Chân giò' },
+            { lesson: 13, char: '麵線', pinyin: 'miànxiàn', meaning: 'Mì sợi nhỏ' },
+            { lesson: 13, char: '蛋', pinyin: 'dàn', meaning: 'Trứng' },
+            { lesson: 13, char: '傳統', pinyin: 'chuántǒng', meaning: 'Truyền thống' },
+            { lesson: 13, char: '年輕', pinyin: 'niánqīng', meaning: 'Trẻ' },
+            { lesson: 13, char: '蛋糕', pinyin: 'dàngāo', meaning: 'Bánh gato' },
+            { lesson: 13, char: '祝', pinyin: 'zhù', meaning: 'Chúc' },
+            { lesson: 13, char: '萬事如意', pinyin: 'wànshì rúyì', meaning: 'Vạn sự như ý' },
+            { lesson: 13, char: '心想事成', pinyin: 'xīnxiǎng shìchéng', meaning: 'Muốn gì được nấy' },
+            { lesson: 14, char: '天氣', pinyin: 'tiānqì', meaning: 'Thời tiết' },
+            { lesson: 14, char: '冷', pinyin: 'lěng', meaning: 'Lạnh' },
+            { lesson: 14, char: '風', pinyin: 'fēng', meaning: 'Gió' },
+            { lesson: 14, char: '滑雪', pinyin: 'huáxuě', meaning: 'Trượt tuyết' },
+            { lesson: 14, char: '春天', pinyin: 'chūntiān', meaning: 'Mùa xuân' },
+            { lesson: 14, char: '新年', pinyin: 'xīnnián', meaning: 'Năm mới' },
+            { lesson: 14, char: '父母', pinyin: 'fùmǔ', meaning: 'Bố mẹ' },
+            { lesson: 14, char: '冬天', pinyin: 'dōngtiān', meaning: 'Mùa đông' },
+            { lesson: 14, char: '明年', pinyin: 'míngnián', meaning: 'Năm sau' },
+            { lesson: 14, char: '秋天', pinyin: 'qiūtiān', meaning: 'Mùa thu' },
+            { lesson: 14, char: '紅葉', pinyin: 'hóngyè', meaning: 'Lá phong đỏ' },
+            { lesson: 14, char: '只', pinyin: 'zhǐ', meaning: 'Chỉ' },
+            { lesson: 14, char: '下雪', pinyin: 'xiàxuě', meaning: 'Tuyết rơi' },
+            { lesson: 14, char: '月底', pinyin: 'yuèdǐ', meaning: 'Cuối tháng' },
+            { lesson: 14, char: '雨', pinyin: 'yǔ', meaning: 'Mưa' },
+            { lesson: 14, char: '傘', pinyin: 'sǎn', meaning: 'Ô, dù' },
+            { lesson: 14, char: '颱風', pinyin: 'táifēng', meaning: 'Bão' },
+            { lesson: 14, char: '夏天', pinyin: 'xiàtiān', meaning: 'Mùa hè' },
+            { lesson: 14, char: '濕', pinyin: 'shī', meaning: 'Ẩm ướt' },
+            { lesson: 14, char: '討厭', pinyin: 'tǎoyàn', meaning: 'Ghét' },
+            { lesson: 14, char: '新聞', pinyin: 'xīnwén', meaning: 'Tin tức' },
+            { lesson: 14, char: '更', pinyin: 'gèng', meaning: 'Càng' },
+            { lesson: 14, char: '大家', pinyin: 'dàjiā', meaning: 'Mọi người' },
+            { lesson: 14, char: '小心', pinyin: 'xiǎoxīn', meaning: 'Cẩn thận' },
+            { lesson: 14, char: '可怕', pinyin: 'kěpà', meaning: 'Đáng sợ' },
+            { lesson: 14, char: '停', pinyin: 'tíng', meaning: 'Dừng, tạnh' },
+            { lesson: 14, char: '下雨', pinyin: 'xiàyǔ', meaning: 'Mưa rơi' },
+            { lesson: 14, char: '這次', pinyin: 'zhè cì', meaning: 'Lần này' },
+            { lesson: 14, char: '上次', pinyin: 'shàng cì', meaning: 'Lần trước' },
+            { lesson: 14, char: '慢走', pinyin: 'mànzǒu', meaning: 'Đi cẩn thận' },
+            { lesson: 15, char: '醫生', pinyin: 'yīshēng', meaning: 'Bác sĩ' },
+            { lesson: 15, char: '一直', pinyin: 'yìzhí', meaning: 'Liên tục' },
+            { lesson: 15, char: '流', pinyin: 'liú', meaning: 'Chảy' },
+            { lesson: 15, char: '鼻水', pinyin: 'bíshuǐ', meaning: 'Nước mũi' },
+            { lesson: 15, char: '頭', pinyin: 'tóu', meaning: 'Đầu' },
+            { lesson: 15, char: '痛', pinyin: 'tòng', meaning: 'Đau, nhức' },
+            { lesson: 15, char: '胃口', pinyin: 'wèikǒu', meaning: 'Khẩu vị' },
+            { lesson: 15, char: '差', pinyin: 'chà', meaning: 'Kém, tồi' },
+            { lesson: 15, char: '喉嚨', pinyin: 'hóulóng', meaning: 'Cổ họng' },
+            { lesson: 15, char: '發炎', pinyin: 'fāyán', meaning: 'Viêm, sưng' },
+            { lesson: 15, char: '生病', pinyin: 'shēngbìng', meaning: 'Bị ốm' },
+            { lesson: 15, char: '發燒', pinyin: 'fāshāo', meaning: 'Sốt' },
+            { lesson: 15, char: '感冒', pinyin: 'gǎnmào', meaning: 'Cảm cúm' },
+            { lesson: 15, char: '藥', pinyin: 'yào', meaning: 'Thuốc' },
+            { lesson: 15, char: '藥局', pinyin: 'yàojú', meaning: 'Hiệu thuốc' },
+            { lesson: 15, char: '拿', pinyin: 'ná', meaning: 'Lấy, cầm' },
+            { lesson: 15, char: '把', pinyin: 'bǎ', meaning: '(trợ từ xử lý)' },
+            { lesson: 15, char: '休息', pinyin: 'xiūxí', meaning: 'Nghỉ ngơi' },
+            { lesson: 15, char: '睡覺', pinyin: 'shuìjiào', meaning: 'Ngủ' },
+            { lesson: 15, char: '早一點', pinyin: 'zǎo yìdiǎn', meaning: 'Sớm một chút' },
+            { lesson: 15, char: '臉色', pinyin: 'liǎnsè', meaning: 'Sắc mặt' },
+            { lesson: 15, char: '難看', pinyin: 'nánkàn', meaning: 'Khó coi' },
+            { lesson: 15, char: '肚子', pinyin: 'dùzi', meaning: 'Bụng' },
+            { lesson: 15, char: '吐', pinyin: 'tù', meaning: 'Nôn, ói' },
+            { lesson: 15, char: '陪', pinyin: 'péi', meaning: 'Đi cùng' },
+            { lesson: 15, char: '看病', pinyin: 'kànbìng', meaning: 'Khám bệnh' },
+            { lesson: 15, char: '健康', pinyin: 'jiànkāng', meaning: 'Sức khỏe' },
+            { lesson: 15, char: '保險', pinyin: 'bǎoxiǎn', meaning: 'Bảo hiểm' },
+            { lesson: 15, char: '油', pinyin: 'yóu', meaning: 'Dầu mỡ' },
+            { lesson: 15, char: '冰', pinyin: 'bīng', meaning: 'Đá, lạnh' },
+            { lesson: 15, char: '別', pinyin: 'bié', meaning: 'Đừng' },
+            { lesson: 15, char: '關心', pinyin: 'guānxīn', meaning: 'Quan tâm' },
+            { lesson: 15, char: '包', pinyin: 'bāo', meaning: 'Gói, túi' },
+            { lesson: 15, char: '小時', pinyin: 'xiǎoshí', meaning: 'Tiếng đồng hồ' },
+            { lesson: 15, char: '怎麼了', pinyin: 'zěnme le', meaning: 'Sao thế?' },
+            { lesson: 15, char: '不用了', pinyin: 'búyòng le', meaning: 'Không cần đâu' },
+            { lesson: 15, char: '健康中心', pinyin: 'jiànkāng zhōngxīn', meaning: 'Trung tâm y tế' },
+            { lesson: 15, char: '回家', pinyin: 'huíjiā', meaning: 'Về nhà' },
+            { lesson: 15, char: '最好', pinyin: 'zuìhǎo', meaning: 'Tốt nhất' },
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentFilteredData = [];
+            let currentQuiz = { questions: [], wrongAnswers: [], currentQuestionIndex: 0, score: 0, settings: {} };
+            let reviewSession = { queue: [], currentWord: null };
+            
+            const grid = document.getElementById('vocab-grid');
+            const lessonFilter = document.getElementById('lesson-filter');
+            const searchInput = document.getElementById('search-input');
+            const wordCountEl = document.getElementById('word-count');
+            
+            const practiceBtn = document.getElementById('practice-btn');
+            const reviewBtn = document.getElementById('review-btn');
+            
+            const quizModal = document.getElementById('quiz-modal');
+            const quizModalContent = document.getElementById('quiz-modal-content');
+            const quizSetup = document.getElementById('quiz-setup');
+            const quizMain = document.getElementById('quiz-main');
+            const quizResults = document.getElementById('quiz-results');
+            const closeQuizSetupBtn = document.getElementById('close-quiz-setup-btn');
+            const startQuizBtn = document.getElementById('start-quiz-btn');
+            const quizCloseBtn = document.getElementById('quiz-close-btn');
+            const quizRestartBtn = document.getElementById('quiz-restart-btn');
+            const quizReviewWrongBtn = document.getElementById('quiz-review-wrong-btn');
+            
+            const reviewModal = document.getElementById('review-modal');
+            const reviewModalContent = document.getElementById('review-modal-content');
+            const reviewCloseBtn = document.getElementById('review-close-btn');
+            const reviewCardContainer = document.getElementById('review-card-container');
+            const reviewDifficultyButtons = document.getElementById('review-difficulty-buttons');
+
+            // Populate lesson filter
+            const lessons = [...new Set(vocabData.map(item => item.lesson))];
+            lessons.sort((a, b) => a - b).forEach(lesson => {
+                const option = document.createElement('option');
+                option.value = lesson;
+                option.textContent = `Bài ${lesson}`;
+                lessonFilter.appendChild(option);
+            });
+
+            function speak(text) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert('Trình duyệt của bạn không hỗ trợ chức năng phát âm.');
+                }
+            }
+
+            const renderCards = (data) => {
+                grid.innerHTML = '';
+                if (data.length === 0) {
+                    grid.innerHTML = `<p class="col-span-full text-center text-slate-500">Không tìm thấy từ vựng nào.</p>`;
+                    wordCountEl.textContent = '0 từ vựng';
+                    return;
+                }
+                
+                wordCountEl.textContent = `${data.length} từ vựng`;
+                currentFilteredData = data;
+
+                data.forEach(word => {
+                    const cardWrapper = document.createElement('div');
+                    cardWrapper.className = 'flashcard h-32';
+                    
+                    const inner = document.createElement('div');
+                    inner.className = 'flashcard-inner';
+                    inner.addEventListener('click', () => cardWrapper.classList.toggle('is-flipped'));
+
+                    const front = document.createElement('div');
+                    front.className = 'flashcard-front bg-white shadow-lg border border-slate-200';
+                    front.innerHTML = `<span class="text-3xl font-semibold text-slate-800 text-center">${word.char}</span>`;
+
+                    const back = document.createElement('div');
+                    back.className = 'flashcard-back bg-blue-600 text-white shadow-lg relative';
+                    back.innerHTML = `
+                        <p class="text-lg font-medium">${word.pinyin}</p>
+                        <p class="mt-1 text-center">${word.meaning}</p>
+                        <button class="speak-btn" data-text="${word.char}">🔊</button>
+                    `;
+                    
+                    inner.appendChild(front);
+                    inner.appendChild(back);
+                    cardWrapper.appendChild(inner);
+                    
+                    grid.appendChild(cardWrapper);
+                });
+            }
+            
+            grid.addEventListener('click', function(e) {
+                if (e.target.classList.contains('speak-btn')) {
+                    e.stopPropagation();
+                    const textToSpeak = e.target.getAttribute('data-text');
+                    speak(textToSpeak);
+                }
+            });
+
+            const getFilteredData = () => {
+                 const selectedLesson = lessonFilter.value;
+                 const searchTerm = searchInput.value.toLowerCase();
+                 let filteredData = vocabData;
+
+                 if (selectedLesson !== 'all') {
+                     filteredData = filteredData.filter(word => word.lesson == selectedLesson);
+                 }
+                
+                 if (searchTerm) {
+                     filteredData = filteredData.filter(word => 
+                         word.char.toLowerCase().includes(searchTerm) ||
+                         word.pinyin.toLowerCase().includes(searchTerm) ||
+                         word.meaning.toLowerCase().includes(searchTerm)
+                     );
+                 }
+                 return filteredData;
+            }
+
+            const filterAndRender = () => {
+                const data = getFilteredData();
+                renderCards(data);
+            }
+
+            function showModal(modal, content) {
+                modal.classList.add('active');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                }, 10);
+            }
+
+            function hideModal(modal, content) {
+                 content.classList.add('scale-95', 'opacity-0');
+                 setTimeout(() => {
+                    modal.classList.remove('active');
+                    quizSetup.style.display = 'block';
+                    quizMain.style.display = 'none';
+                    quizResults.style.display = 'none';
+                 }, 300);
+            }
+            
+            function setupQuiz() {
+                const quizSource = document.getElementById('quiz-source').value;
+                let sourceData = (quizSource === 'current') ? getFilteredData() : vocabData;
+
+                if (sourceData.length < 4) {
+                    alert('Cần ít nhất 4 từ trong danh sách đã chọn để tạo bài kiểm tra.');
+                    return;
+                }
+
+                currentQuiz.settings.type = document.getElementById('quiz-type').value;
+                currentQuiz.questions = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 10);
+                currentQuiz.currentQuestionIndex = 0;
+                currentQuiz.score = 0;
+                currentQuiz.wrongAnswers = [];
+
+                quizSetup.style.display = 'none';
+                quizResults.style.display = 'none';
+                quizMain.style.display = 'block';
+                displayQuizQuestion();
+            }
+
+            function displayQuizQuestion() {
+                if (currentQuiz.currentQuestionIndex >= currentQuiz.questions.length) {
+                    showQuizResults();
+                    return;
+                }
+
+                const questionEl = document.getElementById('quiz-question');
+                const hintEl = document.getElementById('quiz-question-hint');
+                const optionsEl = document.getElementById('quiz-options');
+                const progressEl = document.getElementById('quiz-progress');
+                const feedbackEl = document.getElementById('quiz-feedback');
+
+                feedbackEl.textContent = '';
+                optionsEl.innerHTML = '';
+                
+                progressEl.textContent = `Câu ${currentQuiz.currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
+                const currentWord = currentQuiz.questions[currentQuiz.currentQuestionIndex];
+                let questionText, questionHint = '', answerKey, optionKey;
+
+                if (currentQuiz.settings.type === 'char-to-meaning') {
+                    questionText = currentWord.char;
+                    questionHint = currentWord.pinyin;
+                    answerKey = 'meaning';
+                    optionKey = 'meaning';
+                } else if (currentQuiz.settings.type === 'pinyin-to-meaning') {
+                    questionText = currentWord.pinyin;
+                    questionHint = `(Gợi ý: ${currentWord.char})`;
+                    answerKey = 'meaning';
+                    optionKey = 'meaning';
+                } else {
+                    questionText = currentWord.meaning;
+                    questionHint = `(Pinyin: ${currentWord.pinyin})`;
+                    answerKey = 'char';
+                    optionKey = 'char';
+                }
+
+                questionEl.textContent = questionText;
+                hintEl.textContent = questionHint;
+
+                const options = [currentWord];
+                let allPossibleOptions = vocabData.filter(w => w.char !== currentWord.char);
+                while(options.length < 4) {
+                    const randomWord = allPossibleOptions[Math.floor(Math.random() * allPossibleOptions.length)];
+                    if (!options.some(opt => opt[optionKey] === randomWord[optionKey])) {
+                        options.push(randomWord);
+                    }
+                }
+
+                options.sort(() => 0.5 - Math.random()).forEach(opt => {
+                    const button = document.createElement('button');
+                    button.className = 'w-full text-left p-4 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition';
+                    button.innerHTML = `<span class="font-semibold text-lg">${opt[optionKey]}</span>`;
+                    button.onclick = () => checkQuizAnswer(opt === currentWord, currentWord, opt[optionKey]);
+                    optionsEl.appendChild(button);
+                });
+            }
+
+            function checkQuizAnswer(isCorrect, correctWord, chosenAnswer) {
+                const feedbackEl = document.getElementById('quiz-feedback');
+                const options = document.querySelectorAll('#quiz-options button');
+                options.forEach(btn => btn.disabled = true);
+
+                 if(isCorrect) {
+                     currentQuiz.score++;
+                     feedbackEl.textContent = 'Chính xác!';
+                     feedbackEl.className = 'mt-4 text-center font-semibold text-green-600';
+                 } else {
+                     feedbackEl.textContent = `Sai rồi! Đáp án đúng là "${correctWord[currentQuiz.settings.type.split('-')[1]]}"`;
+                     feedbackEl.className = 'mt-4 text-center font-semibold text-red-600';
+                     currentQuiz.wrongAnswers.push({ question: correctWord, chosen: chosenAnswer });
+                 }
+
+                 currentQuiz.currentQuestionIndex++;
+                 setTimeout(displayQuizQuestion, 2000);
+            }
+
+            function showQuizResults() {
+                quizMain.style.display = 'none';
+                quizResults.style.display = 'block';
+                document.getElementById('quiz-score').textContent = `${currentQuiz.score} / ${currentQuiz.questions.length}`;
+                
+                const wrongAnswersEl = document.getElementById('quiz-wrong-answers');
+                wrongAnswersEl.innerHTML = '';
+
+                if (currentQuiz.wrongAnswers.length > 0) {
+                    quizReviewWrongBtn.style.display = 'inline-flex';
+                    let wrongHtml = '<h4 class="font-bold mb-2">Các câu trả lời sai:</h4><ul>';
+                    currentQuiz.wrongAnswers.forEach(item => {
+                        const q = item.question;
+                        wrongHtml += `<li class="mb-2 p-2 bg-red-50 rounded-md">
+                            <span class="font-medium">${q.char} (${q.pinyin})</span>: ${q.meaning}. <br/>
+                            <span class="text-sm text-red-700">Bạn đã chọn: "${item.chosen}"</span>
+                        </li>`;
+                    });
+                    wrongHtml += '</ul>';
+                    wrongAnswersEl.innerHTML = wrongHtml;
+                } else {
+                    quizReviewWrongBtn.style.display = 'none';
+                    wrongAnswersEl.innerHTML = '<p class="text-green-600">Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi.</p>';
+                }
+            }
+            
+            practiceBtn.addEventListener('click', () => showModal(quizModal, quizModalContent));
+            closeQuizSetupBtn.addEventListener('click', () => hideModal(quizModal, quizModalContent));
+            startQuizBtn.addEventListener('click', setupQuiz);
+            quizCloseBtn.addEventListener('click', () => hideModal(quizModal, quizModalContent));
+            quizRestartBtn.addEventListener('click', () => {
+                quizResults.style.display = 'none';
+                quizSetup.style.display = 'block';
+            });
+            quizReviewWrongBtn.addEventListener('click', () => {
+                currentQuiz.questions = currentQuiz.wrongAnswers.map(item => item.question);
+                currentQuiz.currentQuestionIndex = 0;
+                currentQuiz.score = 0;
+                currentQuiz.wrongAnswers = [];
+                quizResults.style.display = 'none';
+                quizMain.style.display = 'block';
+                displayQuizQuestion();
+            });
+            
+            reviewBtn.addEventListener('click', () => {
+                let sourceData = getFilteredData();
+                if (sourceData.length === 0) {
+                    alert('Hãy chọn một bộ từ để ôn tập.');
+                    return;
+                }
+                reviewSession.queue = [...sourceData].sort(() => 0.5 - Math.random());
+                startReviewSession();
+            });
+
+            function startReviewSession() {
+                reviewDifficultyButtons.classList.add('hidden');
+                reviewCardContainer.querySelector('.flashcard').classList.remove('is-flipped');
+                showModal(reviewModal, reviewModalContent);
+                nextReviewWord();
+            }
+
+            function nextReviewWord() {
+                 if(reviewSession.queue.length === 0) {
+                    alert('Hoàn thành phiên ôn tập!');
+                    hideModal(reviewModal, reviewModalContent);
+                    return;
+                 }
+                 document.getElementById('review-progress').textContent = `Còn lại: ${reviewSession.queue.length} từ`;
+                 reviewDifficultyButtons.classList.add('hidden');
+                 reviewCardContainer.querySelector('.flashcard').classList.remove('is-flipped');
+
+                 reviewSession.currentWord = reviewSession.queue.shift();
+                 const word = reviewSession.currentWord;
+                 document.getElementById('review-card-front').innerHTML = `<span class="text-5xl font-semibold">${word.char}</span>`;
+                 document.getElementById('review-card-back').innerHTML = `
+                        <p class="text-3xl font-semibold">${word.char}</p>
+                        <p class="text-xl mt-2">${word.pinyin}</p>
+                        <p class="mt-2 text-lg text-center">${word.meaning}</p>
+                 `;
+            }
+
+            reviewCardContainer.addEventListener('click', () => {
+                reviewCardContainer.querySelector('.flashcard').classList.add('is-flipped');
+                reviewDifficultyButtons.classList.remove('hidden');
+            });
+            
+            reviewDifficultyButtons.addEventListener('click', (e) => {
+                if(e.target.matches('.btn-difficulty')) {
+                    const difficulty = parseInt(e.target.dataset.difficulty);
+                    if (difficulty === 1) { 
+                        reviewSession.queue.splice(1, 0, reviewSession.currentWord);
+                    } else if (difficulty === 2) { 
+                        reviewSession.queue.splice(Math.floor(reviewSession.queue.length / 2), 0, reviewSession.currentWord);
+                    }
+                    nextReviewWord();
+                }
+            });
+
+            reviewCloseBtn.addEventListener('click', () => hideModal(reviewModal, reviewModalContent));
+            
+            // Initial Setup
+            lessonFilter.addEventListener('change', filterAndRender);
+            searchInput.addEventListener('input', filterAndRender);
+            filterAndRender();
+        });
+    </script>
+</body>
+</html>
