@@ -39,9 +39,33 @@ const data = {
                         { "char": "對不起", "pinyin": "duìbùqǐ", "meaning": "xin lỗi" },
                     ],
                     grammar: [
-                        { title: "Cách đặt câu hỏi", content: "<b>Câu hỏi Chính-Phản (A-not-A):</b> V + 不 + V? <br><i>Ví dụ: 你是不是日本人？(Bạn có phải là người Nhật không?)</i><br><br><b>Câu hỏi với 嗎 (ma):</b> Câu trần thuật + 嗎? <br><i>Ví dụ: 你是陳月美小姐嗎？(Bạn có phải là cô Trần Nguyệt Mỹ không?)</i>" },
-                        { title: "Phó từ chỉ mức độ 很 (hěn)", content: "Thường đứng trước tính từ. Trong câu trần thuật đơn giản, nó giúp câu tự nhiên hơn và không nhất thiết mang nghĩa 'rất'.<br><i>Ví dụ: 我很好。(Tôi khỏe.)</i>" },
-                        { title: "Câu hỏi với 呢 (ne)", content: "Dùng để hỏi lại một câu hỏi tương tự về một đối tượng khác.<br><i>Ví dụ: 我是美國人，你呢？(Tôi là người Mỹ, còn bạn thì sao?)</i>" }
+                        { 
+                            title: "Cách đặt câu hỏi", 
+                            content: "<b>Câu hỏi Chính-Phản (A-not-A):</b> V + 不 + V? <br><i>Ví dụ: 你是不是日本人？(Bạn có phải là người Nhật không?)</i><br><br><b>Câu hỏi với 嗎 (ma):</b> Câu trần thuật + 嗎? <br><i>Ví dụ: 你是陳月美小姐嗎？(Bạn có phải là cô Trần Nguyệt Mỹ không?)</i>",
+                            quiz: {
+                                question: "你___陳小姐嗎？",
+                                options: ["是", "是不是", "叫"],
+                                answer: "是"
+                            }
+                        },
+                        { 
+                            title: "Phó từ chỉ mức độ 很 (hěn)", 
+                            content: "Thường đứng trước tính từ. Trong câu trần thuật đơn giản, nó giúp câu tự nhiên hơn và không nhất thiết mang nghĩa 'rất'.<br><i>Ví dụ: 我很好。(Tôi khỏe.)</i>",
+                            quiz: {
+                                question: "我___好。",
+                                options: ["很", "嗎", "不"],
+                                answer: "很"
+                            }
+                        },
+                        { 
+                            title: "Câu hỏi với 呢 (ne)", 
+                            content: "Dùng để hỏi lại một câu hỏi tương tự về một đối tượng khác.<br><i>Ví dụ: 我是美國人，你呢？(Tôi là người Mỹ, còn bạn thì sao?)</i>",
+                            quiz: {
+                                question: "我是美國人，你___？",
+                                options: ["呢", "嗎", "很"],
+                                answer: "呢"
+                            }
+                        }
                     ]
                 },
                 {
@@ -81,10 +105,42 @@ const data = {
                         { char: '兩', pinyin: 'liǎng', meaning: 'hai' },
                     ],
                     grammar: [
-                        { title: 'Sở hữu cách với 的 (de)', content: 'Chỉ sự sở hữu. <i>Ví dụ: 我的書 (sách của tôi).</i> Có thể lược bỏ khi quan hệ thân thiết.' },
-                        { title: 'Câu tồn tại với 有 (yǒu)', content: 'Diễn tả sự tồn tại. <i>Ví dụ: 你家有很多照片。(Nhà bạn có nhiều ảnh).</i>' },
-                        { title: 'Phó từ 都 (dōu)', content: 'Nghĩa là "đều". <i>Ví dụ: 我們都姓陳。(Chúng tôi đều họ Trần).</i>' },
-                        { title: 'Lượng từ 個 (ge) và 張 (zhāng)', content: 'Bắt buộc khi có số từ. <i>Ví dụ: 一個哥哥, 兩張照片.</i>' },
+                        { 
+                            title: 'Sở hữu cách với 的 (de)', 
+                            content: 'Chỉ sự sở hữu. <i>Ví dụ: 我的書 (sách của tôi).</i> Có thể lược bỏ khi quan hệ thân thiết.',
+                            quiz: {
+                                question: "這是我___書。",
+                                options: ["的", "嗎", "很"],
+                                answer: "的"
+                            }
+                        },
+                        { 
+                            title: 'Câu tồn tại với 有 (yǒu)', 
+                            content: 'Diễn tả sự tồn tại. <i>Ví dụ: 你家有很多照片。(Nhà bạn có nhiều ảnh).</i>',
+                            quiz: {
+                                question: "我家___三個人。",
+                                options: ["有", "是", "在"],
+                                answer: "有"
+                            }
+                        },
+                        { 
+                            title: 'Phó từ 都 (dōu)', 
+                            content: 'Nghĩa là "đều". <i>Ví dụ: 我們都姓陳。(Chúng tôi đều họ Trần).</i>',
+                            quiz: {
+                                question: "我們___是學生。",
+                                options: ["都", "也", "很"],
+                                answer: "都"
+                            }
+                        },
+                        { 
+                            title: 'Lượng từ 個 (ge) và 張 (zhāng)', 
+                            content: 'Bắt buộc khi có số từ. <i>Ví dụ: 一個哥哥, 兩張照片.</i>',
+                            quiz: {
+                                question: "我有三___中文書。",
+                                options: ["本", "個", "張"],
+                                answer: "本"
+                            }
+                        }
                     ]
                 },
                 {
