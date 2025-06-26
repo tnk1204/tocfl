@@ -1,0 +1,12 @@
+[
+  {"word":"你好","pinyin":"nǐ hǎo","meaning":"xin chào","example":"你好！很高興認識你。"},
+  {"word":"謝謝","pinyin":"xièxie","meaning":"cảm ơn","example":"謝謝你的幫助。"},
+  {"word":"再見","pinyin":"zàijiàn","meaning":"tạm biệt","example":"我們下次再見。"},
+  {"word":"請","pinyin":"qǐng","meaning":"làm ơn","example":"請進來。"},
+  {"word":"對不起","pinyin":"duìbuqǐ","meaning":"xin lỗi","example":"對不起，我來晚了。"},
+  {"word":"沒關係","pinyin":"méi guānxi","meaning":"không sao","example":"沒關係，別擔心。"},
+  {"word":"老師","pinyin":"lǎoshī","meaning":"giáo viên","example":"她是我的中文老師。"},
+  {"word":"學生","pinyin":"xuéshēng","meaning":"học sinh","example":"我是大學學生。"},
+  {"word":"名字","pinyin":"míngzi","meaning":"tên","example":"你的名字是什麼？"},
+  {"word":"中國","pinyin":"Zhōngguó","meaning":"Trung Quốc","example":"我想去中國旅遊。"}
+] 
