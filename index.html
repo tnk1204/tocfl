@@ -3,720 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học Tiếng Trung Đương Đại - Nâng cao</title>
+    <title>Học tiếng Trung - TOCFL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Serene Sage & Stone -->
-    <!-- Application Structure Plan: Ứng dụng được tái cấu trúc theo kiến trúc mobile-first, tập trung vào một chu trình học tập hoàn chỉnh. Thanh điều hướng dưới cùng (trên di động) là trung tâm, cho phép truy cập nhanh vào các tính năng chính: Bảng điều khiển (Dashboard), Bài học, Luyện viết, và Sổ tay. Cấu trúc này giúp người dùng dễ dàng chuyển đổi giữa việc học kiến thức mới (Bài học), thực hành (Luyện viết), và ôn tập các từ đã lưu (Sổ tay). Các tính năng ôn tập (Flashcard) và kiểm tra (Quiz) được tích hợp trực tiếp vào từng bài học để mang lại trải nghiệm học tập theo ngữ cảnh và có mục tiêu rõ ràng. -->
-    <!-- Visualization & Content Choices: 
-        - Mục tiêu: Cung cấp một bộ công cụ học tập tương tác, toàn diện.
-        - Trình bày & Tương tác:
-            1.  **Dashboard (Bảng điều khiển):** Là trang chủ, cung cấp biểu đồ tiến trình từ vựng (Chart.js), thống kê nhanh (số từ đã lưu), và lối tắt đến các tính năng chính.
-            2.  **Học từ vựng:** Mỗi từ vựng có nút phát âm (🔊) sử dụng Web Speech API và nút lưu vào sổ tay (⭐).
-            3.  **Luyện viết (Writing Practice):** Tính năng mới hoàn toàn, cung cấp một canvas để người dùng tập viết chữ Hán bằng chuột hoặc cảm ứng. Có các nút chức năng như "Xóa", "Gợi ý" (vẽ mờ ký tự) và "Từ tiếp theo".
-            4.  **Sổ tay từ vựng (Notebook):** Tính năng mới, hoạt động như một bộ sưu tập cá nhân. Người dùng có thể lưu các từ khó hoặc quan trọng để ôn tập tập trung.
-            5.  **Flashcard & Quiz:** Được tích hợp trong mỗi bài học, cho phép người dùng ôn tập và kiểm tra kiến thức của bài đó một cách cụ thể.
-        - Căn cứ lựa chọn: Các tính năng này tạo ra một vòng lặp học tập hiệu quả: Học -> Lưu -> Thực hành -> Ôn tập -> Kiểm tra. Giao diện được thiết kế để hỗ trợ tốt nhất cho chu trình này, giúp việc học trở nên có cấu trúc và hấp dẫn hơn.
-        - Thư viện/Phương pháp: Tailwind CSS, Vanilla JS, Chart.js.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-    <style>
-        :root {
-            --bg-main: #f8f9fa;
-            --bg-secondary: #ffffff;
-            --text-primary: #212529;
-            --text-secondary: #6c757d;
-            --accent: #4a7c59;
-            --accent-light: #d8e2dc;
-            --border-color: #dee2e6;
-        }
-        body { font-family: 'Be Vietnam Pro', sans-serif; background-color: var(--bg-main); color: var(--text-primary); }
-        .app-shell { display: flex; flex-direction: column; height: 100vh; }
-        .main-content-wrapper { display: flex; flex: 1; overflow: hidden; }
-        #main-content { flex: 1; overflow-y: auto; padding: 1rem; }
-        @media (min-width: 768px) { #main-content { padding: 2rem; } }
-        
-        #sidebar { transition: transform 0.3s ease-in-out; }
-        .bottom-nav-item.active, .sidebar-nav-item.active { background-color: var(--accent-light); color: var(--accent); font-weight: 600; }
-        .bottom-nav-item.active .nav-icon, .sidebar-nav-item.active .nav-icon { transform: scale(1.1); }
-
-        .writing-canvas { touch-action: none; }
-        .flashcard-container { perspective: 1000px; }
-        .flashcard { width: 100%; height: 250px; position: relative; transform-style: preserve-3d; transition: transform 0.6s; cursor: pointer; }
-        .flashcard.is-flipped { transform: rotateY(180deg); }
-        .flashcard-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); }
-        .flashcard-front { background-color: var(--bg-secondary); border: 1px solid var(--border-color); }
-        .flashcard-back { background-color: var(--accent); color: white; transform: rotateY(180deg); }
-        .quiz-option:hover { background-color: #f1f3f5; }
-        .quiz-option.correct { background-color: #d4edda !important; border-color: #588157 !important; color: #155724; font-weight: bold; }
-        .quiz-option.incorrect { background-color: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="antialiased">
+    <!-- Study Timer -->
+    <div id="study-timer" class="study-timer">
+        <span id="timer-display">00:00</span>
+    </div>
 
     <div class="app-shell">
+        <!-- Mobile Header -->
+        <header class="md:hidden bg-white border-b p-4 flex items-center justify-between" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+            <h1 id="mobile-header-title" class="text-lg font-bold" style="color: var(--text-primary);">Bảng điều khiển</h1>
+            <div class="flex items-center gap-3">
+                <div class="level-badge">HSK3</div>
+                <div class="streak-counter">
+                    🔥 <span id="mobile-streak">5</span>
+                </div>
+                <button id="mobile-theme-toggle" class="theme-toggle"></button>
+            </div>
+        </header>
+
         <div class="main-content-wrapper">
             <!-- Sidebar (Desktop) -->
-            <aside id="sidebar" class="bg-white w-72 flex-shrink-0 hidden md:flex md:flex-col border-r border-stone-200">
-                <div class="p-4 border-b border-stone-200">
-                    <h1 class="text-xl font-bold text-stone-700">Học Tiếng Trung</h1>
-                    <p class="text-sm text-stone-500">Giáo trình Đương Đại</p>
+            <aside id="sidebar" class="hidden md:flex md:flex-col md:w-64 bg-white border-r" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                <div class="p-6 border-b" style="border-color: var(--border-color);">
+                    <div class="flex items-center gap-3 mb-4">
+                        <h1 class="text-xl font-bold" style="color: var(--text-primary);">TOCFL Learning</h1>
+                        <button id="desktop-theme-toggle" class="theme-toggle"></button>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="level-badge">HSK3</div>
+                        <div class="streak-counter">
+                            🔥 <span id="desktop-streak">5</span>
+                        </div>
+                    </div>
                 </div>
-                <nav class="p-2 space-y-2 flex-1">
-                     <button data-view="dashboard" class="sidebar-nav-item w-full text-left px-4 py-2 text-stone-600 hover:bg-stone-100 hover:text-stone-800 rounded-md transition duration-150 flex items-center gap-3">
-                        <span class="nav-icon text-xl">🏠</span><span>Bảng điều khiển</span>
-                    </button>
-                    <button data-view="lessons" class="sidebar-nav-item w-full text-left px-4 py-2 text-stone-600 hover:bg-stone-100 hover:text-stone-800 rounded-md transition duration-150 flex items-center gap-3">
-                        <span class="nav-icon text-xl">📚</span><span>Bài học</span>
-                    </button>
-                    <button data-view="notebook" class="sidebar-nav-item w-full text-left px-4 py-2 text-stone-600 hover:bg-stone-100 hover:text-stone-800 rounded-md transition duration-150 flex items-center gap-3">
-                        <span class="nav-icon text-xl">⭐</span><span>Sổ tay</span>
-                    </button>
-                    <button data-view="writing" class="sidebar-nav-item w-full text-left px-4 py-2 text-stone-600 hover:bg-stone-100 hover:text-stone-800 rounded-md transition duration-150 flex items-center gap-3">
-                        <span class="nav-icon text-xl">✍️</span><span>Luyện viết</span>
-                    </button>
+                <nav class="flex-1 p-4">
+                    <div class="space-y-2">
+                        <button class="sidebar-nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition" data-view="dashboard">
+                            <span class="nav-icon text-xl">📊</span>
+                            <span>Bảng điều khiển</span>
+                        </button>
+                        <button class="sidebar-nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition" data-view="lessons">
+                            <span class="nav-icon text-xl">📚</span>
+                            <span>Bài học</span>
+                        </button>
+                        <button class="sidebar-nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition" data-view="listening">
+                            <span class="nav-icon text-xl">🎧</span>
+                            <span>Luyện nghe</span>
+                        </button>
+                        <button class="sidebar-nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition" data-view="speaking">
+                            <span class="nav-icon text-xl">🎤</span>
+                            <span>Luyện nói</span>
+                        </button>
+                        <button class="sidebar-nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition" data-view="writing">
+                            <span class="nav-icon text-xl">✍️</span>
+                            <span>Luyện viết</span>
+                        </button>
+                        <button class="sidebar-nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition" data-view="dictionary">
+                            <span class="nav-icon text-xl">📖</span>
+                            <span>Từ điển</span>
+                        </button>
+                        <button class="sidebar-nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition" data-view="notebook">
+                            <span class="nav-icon text-xl">📔</span>
+                            <span>Sổ tay</span>
+                        </button>
+                        <button class="sidebar-nav-item w-full text-left p-3 rounded-lg flex items-center gap-3 transition" data-view="achievements">
+                            <span class="nav-icon text-xl">🏆</span>
+                            <span>Thành tích</span>
+                        </button>
+                    </div>
                 </nav>
             </aside>
-            
-            <div class="flex-1 flex flex-col">
-                 <!-- Header (Mobile-only) -->
-                <header class="md:hidden bg-white p-4 border-b border-stone-200 flex justify-between items-center sticky top-0 z-20">
-                    <h1 id="mobile-header-title" class="text-xl font-bold text-stone-700">Bảng điều khiển</h1>
-                </header>
-                <!-- Main Content -->
-                <main id="main-content">
-                    <!-- Content will be injected here -->
-                </main>
-            </div>
+
+            <!-- Main Content -->
+            <main id="main-content" class="flex-1 overflow-y-auto p-4 md:p-8">
+                <!-- Content will be rendered here dynamically -->
+            </main>
         </div>
-        
+
         <!-- Bottom Navigation (Mobile) -->
-        <nav class="md:hidden bg-white border-t border-stone-200 grid grid-cols-4 shadow-inner">
-             <button data-view="dashboard" data-title="Bảng điều khiển" class="bottom-nav-item flex flex-col items-center justify-center text-stone-500 w-full py-2">
-                <span class="nav-icon text-2xl">🏠</span><span class="text-xs">Dashboard</span>
-            </button>
-            <button data-view="lessons" data-title="Bài học" class="bottom-nav-item flex flex-col items-center justify-center text-stone-500 w-full py-2">
-                <span class="nav-icon text-2xl">📚</span><span class="text-xs">Bài học</span>
-            </button>
-             <button data-view="writing" data-title="Luyện viết" class="bottom-nav-item flex flex-col items-center justify-center text-stone-500 w-full py-2">
-                <span class="nav-icon text-2xl">✍️</span><span class="text-xs">Luyện viết</span>
-            </button>
-            <button data-view="notebook" data-title="Sổ tay" class="bottom-nav-item flex flex-col items-center justify-center text-stone-500 w-full py-2">
-                <span class="nav-icon text-2xl">⭐</span><span class="text-xs">Sổ tay</span>
-            </button>
+        <nav class="md:hidden bg-white border-t" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+            <div class="grid grid-cols-4 gap-1 p-2">
+                <button class="bottom-nav-item p-3 rounded-lg text-center transition" data-view="dashboard">
+                    <div class="nav-icon text-xl mb-1">📊</div>
+                    <div class="text-xs">Tổng quan</div>
+                </button>
+                <button class="bottom-nav-item p-3 rounded-lg text-center transition" data-view="lessons">
+                    <div class="nav-icon text-xl mb-1">📚</div>
+                    <div class="text-xs">Bài học</div>
+                </button>
+                <button class="bottom-nav-item p-3 rounded-lg text-center transition" data-view="writing">
+                    <div class="nav-icon text-xl mb-1">✍️</div>
+                    <div class="text-xs">Luyện viết</div>
+                </button>
+                <button class="bottom-nav-item p-3 rounded-lg text-center transition" data-view="notebook">
+                    <div class="nav-icon text-xl mb-1">📔</div>
+                    <div class="text-xs">Sổ tay</div>
+                </button>
+            </div>
         </nav>
     </div>
 
+    <!-- Include JavaScript modules in correct order -->
     <script>
-        const lessonsData = [
-    {
-        id: 1,
-        title: "Bài 1: 歡迎你來臺灣！",
-        vocab: [
-            { char: "歡迎", pinyin: "huānyíng", viet: "Hoan nghênh" }, { char: "你", pinyin: "nǐ", viet: "Bạn" }, { char: "來", pinyin: "lái", viet: "Đến" }, { char: "臺灣", pinyin: "Táiwān", viet: "Đài Loan" }, { char: "請問", pinyin: "qǐngwèn", viet: "Xin hỏi" }, { char: "是", pinyin: "shì", viet: "Là" }, { char: "小姐", pinyin: "xiǎojiě", viet: "Cô, tiểu thư" }, { char: "嗎", pinyin: "ma", viet: "(Trợ từ nghi vấn) phải không?" }, { char: "謝謝", pinyin: "xièxie", viet: "Cảm ơn" }, { char: "接", pinyin: "jiē", viet: "Đón" }, { char: "我們", pinyin: "wǒmen", viet: "Chúng tôi, chúng ta" }, { char: "不客氣", pinyin: "búkèqi", viet: "Đừng khách sáo" }, { char: "我", pinyin: "wǒ", viet: "Tôi" }, { char: "這", pinyin: "zhè", viet: "Đây, này" }, { char: "先生", pinyin: "xiānshēng", viet: "Ông, ngài, tiên sinh" }, { char: "好", pinyin: "hǎo", viet: "Tốt, khỏe" }, { char: "姓", pinyin: "xìng", viet: "Mang họ, họ là" }, { char: "叫", pinyin: "jiào", viet: "Tên là, gọi là" }, { char: "你們", pinyin: "nǐmen", viet: "Các bạn" }, { char: "請", pinyin: "qǐng", viet: "Mời" }, { char: "喝", pinyin: "hē", viet: "Uống" }, { char: "茶", pinyin: "chá", viet: "Trà" }, { char: "很", pinyin: "hěn", viet: "Rất" }, { char: "好喝", pinyin: "hǎohē", viet: "Ngon (dùng cho đồ uống)" }, { char: "什麼", pinyin: "shénme", viet: "Cái gì" }, { char: "人", pinyin: "rén", viet: "Người" }, { char: "喜歡", pinyin: "xǐhuān", viet: "Thích" }, { char: "呢", pinyin: "ne", viet: "(Trợ từ nghi vấn) còn...thì sao?" }, { char: "他", pinyin: "tā", viet: "Anh ấy, ông ấy" }, { char: "不", pinyin: "bù", viet: "Không" }, { char: "哪", pinyin: "nǎ", viet: "Nào" }, { char: "要", pinyin: "yào", viet: "Muốn" }, { char: "咖啡", pinyin: "kāfēi", viet: "Cà phê" }, { char: "對不起", pinyin: "duìbùqǐ", viet: "Xin lỗi" }, { char: "國", pinyin: "guó", viet: "Nước, quốc gia" }, { char: "美國", pinyin: "Měiguó", viet: "Nước Mỹ" }, { char: "日本", pinyin: "Rìběn", viet: "Nhật Bản" }, { char: "烏龍茶", pinyin: "Wūlóng chá", viet: "Trà Ô Long" }
-        ],
-        grammar: [{ title: "Các cách đặt câu hỏi", content: "Có hai cách chính: <br>1. <b>A-not-A (Chính-Phản):</b> Động từ/Tính từ + 不 + Động từ/Tính từ? (Ví dụ: 你是不是臺灣人？) <br>2. <b>Với 嗎 (ma):</b> Câu trần thuật + 嗎? (Ví dụ: 你是臺灣人嗎？)" }, { title: "Cách trả lời câu hỏi", content: "1. <b>Khẳng định:</b> Lặp lại động từ chính. (Ví dụ: A: 你喜歡臺灣嗎？ B: 喜歡。) <br>2. <b>Phủ định:</b> Dùng 不 + Động từ. (Ví dụ: A: 你喝咖啡嗎？ B: 不喝。)" }, { title: "Phó từ chỉ mức độ 很 (hěn)", content: "Thường đứng trước tính từ để bổ nghĩa, nhưng đôi khi chỉ để hoàn thành cấu trúc câu mà không mang nghĩa 'rất'." }, { title: "Câu hỏi tỉnh lược với 呢 (ne)", content: "Dùng để hỏi lại về một đối tượng khác trong cùng một ngữ cảnh. (Ví dụ: 我喝茶，你呢？)" }
-        ]
-    },
-    {
-        id: 2,
-        title: "Bài 2: 我的家人",
-        vocab: [{ char: "的", pinyin: "de", viet: "Của" }, { char: "家", pinyin: "jiā", viet: "Nhà, gia đình" }, { char: "家人", pinyin: "jiārén", viet: "Người nhà" }, { char: "漂亮", pinyin: "piàoliàng", viet: "Xinh đẹp" }, { char: "房子", pinyin: "fángzi", viet: "Ngôi nhà" }, { char: "坐", pinyin: "zuò", viet: "Ngồi" }, { char: "有", pinyin: "yǒu", viet: "Có" }, { char: "多", pinyin: "duō", viet: "Nhiều" }, { char: "照片", pinyin: "zhàopiàn", viet: "Bức ảnh" }, { char: "都", pinyin: "dōu", viet: "Đều" }, { char: "照相", pinyin: "zhàoxiàng", viet: "Chụp ảnh" }, { char: "張", pinyin: "zhāng", viet: "(Lượng từ) tấm, tờ" }, { char: "好看", pinyin: "hǎokàn", viet: "Đẹp, ưa nhìn" }, { char: "誰", pinyin: "shéi", viet: "Ai" }, { char: "姐姐", pinyin: "jiějie", viet: "Chị gái" }, { char: "妹妹", pinyin: "mèimei", viet: "Em gái" }, { char: "爸爸", pinyin: "bàba", viet: "Bố" }, { char: "媽媽", pinyin: "māma", viet: "Mẹ" }, { char: "請進", pinyin: "qǐng jìn", viet: "Mời vào" }, { char: "伯母", pinyin: "bómǔ", viet: "Bác gái" }, { char: "您", pinyin: "nín", viet: "Ngài, ông, bà (kính trọng)" }, { char: "名字", pinyin: "míngzi", viet: "Tên" }, { char: "書", pinyin: "shū", viet: "Sách" }, { char: "哥哥", pinyin: "gēge", viet: "Anh trai" }, { char: "老師", pinyin: "lǎoshī", viet: "Giáo viên" }, { char: "看書", pinyin: "kànshū", viet: "Đọc sách" }, { char: "幾", pinyin: "jǐ", viet: "Mấy" }, { char: "個", pinyin: "ge", viet: "(Lượng từ) cái, người" }, { char: "沒", pinyin: "méi", viet: "Không (dùng với 有)" }, { char: "兄弟", pinyin: "xiōngdì", viet: "Anh em trai" }, { char: "姐妹", pinyin: "jiěmèi", viet: "Chị em gái" }, { char: "五", pinyin: "wǔ", viet: "Năm (số 5)" }, { char: "兩", pinyin: "liǎng", viet: "Hai (dùng trước lượng từ)" }
-        ],
-        grammar: [{ title: "Sở hữu cách với 的 (de)", content: "Cấu trúc: <b>Chủ sở hữu + 的 + Vật sở hữu</b>. (Ví dụ: 我的書)." }, { title: "Định ngữ với 的 (de)", content: "Cấu trúc: <b>Định ngữ + 的 + Danh từ</b>. (Ví dụ: 漂亮的房子)." }, { title: "Câu tồn tại với 有 (yǒu)", content: "Cấu trúc: <b>Địa điểm + 有 + Sự vật</b>. (Ví dụ: 我家有很多照片)." }, { title: "Phó từ 都 (dōu)", content: "Biểu thị 'tất cả', 'đều'. Thường đứng trước động từ. (Ví dụ: 我們都是學生)." }, { title: "Lượng từ", content: "Cấu trúc: <b>Số từ + Lượng từ + Danh từ</b>. (Ví dụ: 一張照片; 兩個人)." }
-        ]
-    },
-    {
-        id: 3,
-        title: "Bài 3: 週末做什麼？",
-        vocab: [{ char: "週末", pinyin: "zhōumò", viet: "Cuối tuần" }, { char: "聽", pinyin: "tīng", viet: "Nghe" }, { char: "音樂", pinyin: "yīnyuè", viet: "Âm nhạc" }, { char: "運動", pinyin: "yùndòng", viet: "Vận động" }, { char: "打", pinyin: "dǎ", viet: "Chơi, đánh" }, { char: "網球", pinyin: "wǎngqiú", viet: "Quần vợt" }, { char: "棒球", pinyin: "bàngqiú", viet: "Bóng chày" }, { char: "和", pinyin: "hàn", viet: "Và" }, { char: "游泳", pinyin: "yóuyǒng", viet: "Bơi lội" }, { char: "常", pinyin: "cháng", viet: "Thường xuyên" }, { char: "籃球", pinyin: "lánqiú", viet: "Bóng rổ" }, { char: "也", pinyin: "yě", viet: "Cũng" }, { char: "踢", pinyin: "tī", viet: "Đá (bóng)" }, { char: "足球", pinyin: "zúqiú", viet: "Bóng đá" }, { char: "覺得", pinyin: "juéde", viet: "Cảm thấy" }, { char: "好玩", pinyin: "hǎowán", viet: "Vui, thú vị" }, { char: "明天", pinyin: "míngtiān", viet: "Ngày mai" }, { char: "早上", pinyin: "zǎoshàng", viet: "Buổi sáng" }, { char: "去", pinyin: "qù", viet: "Đi" }, { char: "怎麼樣", pinyin: "zěnmeyàng", viet: "Như thế nào?" }, { char: "啊", pinyin: "a", viet: "(Trợ từ)" }, { char: "看", pinyin: "kàn", viet: "Xem" }, { char: "電影", pinyin: "diànyǐng", viet: "Phim" }, { char: "妳", pinyin: "nǐ", viet: "Bạn (nữ)" }, { char: "想", pinyin: "xiǎng", viet: "Muốn, nghĩ" }, { char: "還是", pinyin: "háishì", viet: "Hay là" }, { char: "吧", pinyin: "ba", viet: "(Trợ từ đề nghị)" }, { char: "可以", pinyin: "kěyǐ", viet: "Có thể" }, { char: "學", pinyin: "xué", viet: "Học" }, { char: "中文", pinyin: "Zhōngwén", viet: "Tiếng Trung" }, { char: "一起", pinyin: "yìqǐ", viet: "Cùng nhau" }, { char: "吃", pinyin: "chī", viet: "Ăn" }, { char: "晚飯", pinyin: "wǎnfàn", viet: "Bữa tối" }, { char: "菜", pinyin: "cài", viet: "Món ăn" }, { char: "越南", pinyin: "Yuènán", viet: "Việt Nam" }
-        ],
-        grammar: [{ title: "Vị trí của từ chỉ thời gian", content: "Thường đứng sau chủ ngữ và trước động từ. (Ví dụ: 我們明天去看電影)." }, { title: "Đi làm gì với 去 (qù)", content: "Cấu trúc: <b>去 + Động từ</b>. (Ví dụ: 我去打網球)." }, { title: "Câu chủ đề", content: "Đưa đối tượng muốn bình luận lên đầu câu. (Ví dụ: 美國電影、臺灣電影，我都想看)." }, { title: "Trật tự phó từ 也, 都, 常", content: "<b>也</b> thường đứng trước <b>都</b> và <b>常</b>. (Ví dụ: 我常打籃球，也常踢足球)." }, { title: "Đưa ra đề nghị với 吧 (ba)", content: "Cấu trúc: <b>Câu trần thuật + 吧!</b> (Ví dụ: 我們看臺灣電影吧!)." }
-        ]
-    },
-    {
-        id: 4,
-        title: "Bài 4: 請問一共多少錢？",
-        vocab: [{ char: "一共", pinyin: "yígòng", viet: "Tổng cộng" }, { char: "多少", pinyin: "duōshǎo", viet: "Bao nhiêu" }, { char: "錢", pinyin: "qián", viet: "Tiền" }, { char: "老闆", pinyin: "lǎobǎn", viet: "Ông chủ" }, { char: "買", pinyin: "mǎi", viet: "Mua" }, { char: "杯", pinyin: "bēi", viet: "Cốc, ly" }, { char: "熱", pinyin: "rè", viet: "Nóng" }, { char: "包子", pinyin: "bāozi", viet: "Bánh bao" }, { char: "大", pinyin: "dà", viet: "To, lớn" }, { char: "中", pinyin: "zhōng", viet: "Vừa (size)" }, { char: "小", pinyin: "xiǎo", viet: "Nhỏ" }, { char: "幫", pinyin: "bāng", viet: "Giúp đỡ" }, { char: "微波", pinyin: "wéibō", viet: "Vi sóng" }, { char: "百", pinyin: "bǎi", viet: "Trăm" }, { char: "塊", pinyin: "kuài", viet: "Đồng (tiền tệ)" }, { char: "外帶", pinyin: "wàidài", viet: "Mang đi" }, { char: "內用", pinyin: "nèiyòng", viet: "Dùng tại chỗ" }, { char: "支", pinyin: "zhī", viet: "Chiếc (lượng từ)" }, { char: "新", pinyin: "xīn", viet: "Mới" }, { char: "手機", pinyin: "shǒujī", viet: "Điện thoại di động" }, { char: "太", pinyin: "tài", viet: "Quá" }, { char: "舊", pinyin: "jiù", viet: "Cũ" }, { char: "了", pinyin: "le", viet: "(Trợ từ)" }, { char: "種", pinyin: "zhǒng", viet: "Loại" }, { char: "能", pinyin: "néng", viet: "Có thể (khả năng)" }, { char: "上網", pinyin: "shàngwǎng", viet: "Lên mạng" }, { char: "那", pinyin: "nà", viet: "Kia, đó" }, { char: "貴", pinyin: "guì", viet: "Đắt" }, { char: "賣", pinyin: "mài", viet: "Bán" }, { char: "便宜", pinyin: "piányí", viet: "Rẻ" }, { char: "萬", pinyin: "wàn", viet: "Vạn" }, { char: "千", pinyin: "qiān", viet: "Nghìn" }, { char: "為什麼", pinyin: "wèishénme", viet: "Tại sao" }
-        ],
-        grammar: [{ title: "Lượng từ", content: "塊 (kuài), 杯 (bēi), 支 (zhī), 種 (zhǒng)." }, { title: "Giới từ 幫 (bāng)", content: "Cấu trúc: <b>幫 + Tân ngữ + Động từ</b>. (Ví dụ: 請幫我微波包子)." }, { title: "Lược bỏ Danh từ trung tâm sau 的", content: "Khi danh từ đã rõ, có thể lược bỏ. (Ví dụ: 我要新的 (手機))." }, { title: "Cấu trúc 太...了", content: "Biểu thị mức độ quá cao. (Ví dụ: 太貴了)." }, { title: "Động từ năng nguyện 能 (néng)", content: "Biểu thị khả năng. (Ví dụ: 手機能上網)." }, { title: "多 (duō) chỉ số 'hơn'", content: "Cấu trúc: <b>Số từ + 多...</b>. (Ví dụ: 一萬五千多塊)." }
-        ]
-    },
-    {
-        id: 5,
-        title: "Bài 5: 牛肉麵真好吃",
-        vocab: [{ char: "牛肉", pinyin: "niúròu", viet: "Thịt bò" }, { char: "麵", pinyin: "miàn", viet: "Mì" }, { char: "真", pinyin: "zhēn", viet: "Thật là" }, { char: "好吃", pinyin: "hǎochī", viet: "Ngon (đồ ăn)" }, { char: "說", pinyin: "shuō", viet: "Nói" }, { char: "少", pinyin: "shǎo", viet: "Ít" }, { char: "有名", pinyin: "yǒumíng", viet: "Nổi tiếng" }, { char: "小吃", pinyin: "xiǎochī", viet: "Món ăn vặt" }, { char: "最", pinyin: "zuì", viet: "Nhất" }, { char: "湯", pinyin: "tāng", viet: "Canh, súp" }, { char: "這麼", pinyin: "zhème", viet: "Như vậy" }, { char: "知道", pinyin: "zhīdào", viet: "Biết" }, { char: "家", pinyin: "jiā", viet: "(Lượng từ) cửa hàng" }, { char: "店", pinyin: "diàn", viet: "Cửa hàng" }, { char: "一定", pinyin: "yídìng", viet: "Nhất định" }, { char: "點", pinyin: "diǎn", viet: "Gọi món" }, { char: "碗", pinyin: "wǎn", viet: "Bát, chén" }, { char: "小籠包", pinyin: "xiǎolóngbāo", viet: "Tiểu long bao" }, { char: "臭豆腐", pinyin: "chòudòufu", viet: "Đậu phụ thối" }, { char: "昨天", pinyin: "zuótiān", viet: "Hôm qua" }, { char: "餐廳", pinyin: "cāntīng", viet: "Nhà hàng" }, { char: "可是", pinyin: "kěshì", viet: "Nhưng" }, { char: "辣", pinyin: "là", viet: "Cay" }, { char: "怕", pinyin: "pà", viet: "Sợ" }, { char: "所以", pinyin: "suǒyǐ", viet: "Cho nên" }, { char: "自己", pinyin: "zìjǐ", viet: "Tự mình" }, { char: "做飯", pinyin: "zuòfàn", viet: "Nấu cơm" }, { char: "得", pinyin: "de", viet: "(Bổ ngữ trạng thái)" }, { char: "會", pinyin: "huì", viet: "Biết (học)" }, { char: "甜點", pinyin: "tiándiǎn", viet: "Đồ ngọt" }, { char: "不錯", pinyin: "búcuò", viet: "Không tệ" }, { char: "教", pinyin: "jiāo", viet: "Dạy" }, { char: "到", pinyin: "dào", viet: "Đến" }
-        ],
-        grammar: [{ title: "有一點 (yǒu yìdiǎn)", content: "Cấu trúc: <b>有一點 + Tính từ</b>, biểu thị một chút (thường tiêu cực). (Ví dụ: 有一點辣)." }, { title: "Bổ ngữ trạng thái 得 (de)", content: "Cấu trúc: <b>Động từ + 得 + Tính từ/Trạng từ</b>. (Ví dụ: 他做得很好)." }, { title: "Động từ năng nguyện 會 (huì)", content: "Biểu thị kỹ năng có được qua học tập. (Ví dụ: 我會做飯)." }, { title: "Giới từ 到 (dào)", content: "Biểu thị điểm đến. (Ví dụ: 你到我家來)." }
-        ]
-    },
-    {
-        id: 6,
-        title: "Bài 6: 他們學校在山上",
-        vocab: [{ char: "他們", pinyin: "tāmen", viet: "Bọn họ" }, { char: "學校", pinyin: "xuéxiào", viet: "Trường học" }, { char: "在", pinyin: "zài", viet: "Ở tại" }, { char: "山上", pinyin: "shānshàng", viet: "Trên núi" }, { char: "哪裡", pinyin: "nǎlǐ", viet: "Ở đâu" }, { char: "遠", pinyin: "yuǎn", viet: "Xa" }, { char: "那裡", pinyin: "nàlǐ", viet: "Ở đó" }, { char: "風景", pinyin: "fēngjǐng", viet: "Phong cảnh" }, { char: "美", pinyin: "měi", viet: "Đẹp" }, { char: "前面", pinyin: "qiánmiàn", viet: "Phía trước" }, { char: "海", pinyin: "hǎi", viet: "Biển" }, { char: "後面", pinyin: "hòumiàn", viet: "Phía sau" }, { char: "山", pinyin: "shān", viet: "Núi" }, { char: "真的", pinyin: "zhēnde", viet: "Thật sự" }, { char: "地方", pinyin: "dìfang", viet: "Nơi, chỗ" }, { char: "現在", pinyin: "xiànzài", viet: "Bây giờ" }, { char: "附近", pinyin: "fùjìn", viet: "Gần đây" }, { char: "樓下", pinyin: "lóuxià", viet: "Dưới lầu" }, { char: "找", pinyin: "zhǎo", viet: "Tìm" }, { char: "朋友", pinyin: "péngyou", viet: "Bạn bè" }, { char: "上課", pinyin: "shàngkè", viet: "Đi học" }, { char: "近", pinyin: "jìn", viet: "Gần" }, { char: "方便", pinyin: "fāngbiàn", viet: "Thuận tiện" }, { char: "東西", pinyin: "dōngxi", viet: "Đồ đạc" }, { char: "外面", pinyin: "wàimiàn", viet: "Bên ngoài" }, { char: "裡面", pinyin: "lǐmiàn", viet: "Bên trong" }, { char: "商店", pinyin: "shāngdiàn", viet: "Cửa hàng" }, { char: "宿舍", pinyin: "sùshè", viet: "Ký túc xá" }, { char: "樓", pinyin: "lóu", viet: "Tầng, lầu" }, { char: "棟", pinyin: "dòng", viet: "Tòa (lượng từ)" }, { char: "大樓", pinyin: "dàlóu", viet: "Tòa nhà lớn" }, { char: "圖書館", pinyin: "túshūguǎn", viet: "Thư viện" }, { char: "旁邊", pinyin: "pángbiān", viet: "Bên cạnh" }, { char: "教室", pinyin: "jiàoshì", viet: "Phòng học" }, { char: "游泳池", pinyin: "yóuyǒngchí", viet: "Bể bơi" }
-        ],
-        grammar: [{ title: "Biểu thị vị trí với 在 (zài)", content: "Cấu trúc: <b>Sự vật + 在 + Địa điểm</b>." }, { title: "Câu tồn tại với 有 (yǒu)", content: "Cấu trúc: <b>Địa điểm + 有 + Sự vật</b>." }, { title: "Lặp lại động từ (V-V)", content: "Biểu thị hành động ngắn, thử làm. (Ví dụ: 我想去看看)." }, { title: "Phủ định với 不是 (búshì)", content: "Dùng để phủ nhận một nhận định." }, { title: "Vị trí của hành động", content: "Cấu trúc: <b>Chủ ngữ + 在 + Địa điểm + Động từ</b>." }
-        ]
-    },
-    {
-        id: 7,
-        title: "Bài 7: 早上九點去KTV",
-        vocab: [{ char: "點", pinyin: "diǎn", viet: "Giờ" }, { char: "KTV", pinyin: "KTV", viet: "Karaoke" }, { char: "唱歌", pinyin: "chànggē", viet: "Hát" }, { char: "分", pinyin: "fēn", viet: "Phút" }, { char: "見面", pinyin: "jiànmiàn", viet: "Gặp mặt" }, { char: "從", pinyin: "cóng", viet: "Từ" }, { char: "中午", pinyin: "zhōngwǔ", viet: "Buổi trưa" }, { char: "得", pinyin: "děi", viet: "Phải" }, { char: "銀行", pinyin: "yínháng", viet: "Ngân hàng" }, { char: "時候", pinyin: "shíhou", viet: "Lúc, khi" }, { char: "後天", pinyin: "hòutiān", viet: "Ngày kia" }, { char: "再見", pinyin: "zàijiàn", viet: "Tạm biệt" }, { char: "午餐", pinyin: "wǔcān", viet: "Bữa trưa" }, { char: "剛", pinyin: "gāng", viet: "Vừa mới" }, { char: "下課", pinyin: "xiàkè", viet: "Tan học" }, { char: "下午", pinyin: "xiàwǔ", viet: "Buổi chiều" }, { char: "半", pinyin: "bàn", viet: "Rưỡi, nửa" }, { char: "比賽", pinyin: "bǐsài", viet: "Trận đấu" }, { char: "結束", pinyin: "jiéshù", viet: "Kết thúc" }, { char: "最近", pinyin: "zuìjìn", viet: "Gần đây" }, { char: "忙", pinyin: "máng", viet: "Bận rộn" }, { char: "每", pinyin: "měi", viet: "Mỗi" }, { char: "天", pinyin: "tiān", viet: "Ngày" }, { char: "書法", pinyin: "shūfǎ", viet: "Thư pháp" }, { char: "課", pinyin: "kè", viet: "Bài học" }, { char: "開始", pinyin: "kāishǐ", viet: "Bắt đầu" }, { char: "字", pinyin: "zì", viet: "Chữ" }, { char: "寫", pinyin: "xiě", viet: "Viết" }, { char: "問", pinyin: "wèn", viet: "Hỏi" }
-        ],
-        grammar: [{ title: "Thứ tự thời gian và địa điểm", content: "Cấu trúc: <b>Chủ ngữ + Thời gian + Địa điểm + Động từ</b>." }, { title: "Cấu trúc 從...到...", content: "Từ...đến... (chỉ không gian hoặc thời gian)." }, { title: "Hành động tiếp diễn với 在 (zài)", content: "Cấu trúc: <b>在 + Động từ</b>, biểu thị hành động đang diễn ra." }, { title: "每 (měi)", content: "'Mỗi', thường đi kèm với <b>都 (dōu)</b>. (Ví dụ: 我每天都運動)." }, { title: "可以 (kěyǐ)", content: "Có thể (xin phép)." }
-        ]
-    },
-    {
-        id: 8,
-        title: "Bài 8: 坐火車去臺南",
-        vocab: [{ char: "坐", pinyin: "zuò", viet: "Ngồi (phương tiện)" }, { char: "火車", pinyin: "huǒchē", viet: "Tàu hỏa" }, { char: "跟", pinyin: "gēn", viet: "Cùng với" }, { char: "玩", pinyin: "wán", viet: "Chơi" }, { char: "怎麼", pinyin: "zěnme", viet: "Làm sao" }, { char: "慢", pinyin: "màn", viet: "Chậm" }, { char: "鐘頭", pinyin: "zhōngtóu", viet: "Tiếng đồng hồ" }, { char: "比較", pinyin: "bǐjiào", viet: "Hơn" }, { char: "快", pinyin: "kuài", viet: "Nhanh" }, { char: "車票", pinyin: "chēpiào", viet: "Vé xe" }, { char: "非常", pinyin: "fēicháng", viet: "Vô cùng" }, { char: "但是", pinyin: "dànshì", viet: "Nhưng" }, { char: "又", pinyin: "yòu...yòu...", viet: "Vừa...vừa..." }, { char: "舒服", pinyin: "shūfu", viet: "Thoải mái" }, { char: "站", pinyin: "zhàn", viet: "Trạm, ga" }, { char: "或是", pinyin: "huòshì", viet: "Hoặc là" }, { char: "同學", pinyin: "tóngxué", viet: "Bạn học" }, { char: "參觀", pinyin: "cānguān", viet: "Tham quan" }, { char: "古代", pinyin: "gǔdài", viet: "Cổ đại" }, { char: "騎", pinyin: "qí", viet: "Cưỡi, đi" }, { char: "機車", pinyin: "jīchē", viet: "Xe máy" }, { char: "載", pinyin: "zài", viet: "Chở" }, { char: "捷運", pinyin: "jiéyùn", viet: "Tàu điện ngầm" }, { char: "比", pinyin: "bǐ", viet: "So với" }, { char: "故宮", pinyin: "Gùgōng", viet: "Cố Cung" }
-        ],
-        grammar: [{ title: "Đi cùng ai với 跟 (gēn)", content: "Cấu trúc: <b>A 跟 B 一起 + Động từ</b>." }, { title: "Hỏi cách thức với 怎麼 (zěnme)", content: "Cấu trúc: <b>怎麼 + Động từ?</b>" }, { title: "So sánh ngầm với 比較 (bǐjiào)", content: "Biểu thị mức độ 'hơn'. (Ví dụ: 這個比較好)." }, { title: "Cấu trúc 又...又... (yòu...yòu...)", content: "Biểu thị hai đặc điểm/hành động cùng tồn tại." }, { title: "Câu so sánh với 比 (bǐ)", content: "Cấu trúc: <b>A 比 B + Tính từ</b>." }
-        ]
-    },
-    {
-        id: 9,
-        title: "Bài 9: 放假去哪裡玩？",
-        vocab: [{ char: "放假", pinyin: "fàngjià", viet: "Nghỉ lễ" }, { char: "星期", pinyin: "xīngqī", viet: "Tuần" }, { char: "回國", pinyin: "huíguó", viet: "Về nước" }, { char: "打算", pinyin: "dǎsuàn", viet: "Dự định" }, { char: "電視", pinyin: "diànshì", viet: "Ti vi" }, { char: "影片", pinyin: "yǐngpiàn", viet: "Phim, video" }, { char: "旅行", pinyin: "lǚxíng", viet: "Du lịch" }, { char: "功課", pinyin: "gōngkè", viet: "Bài tập" }, { char: "出去", pinyin: "chūqù", viet: "Đi ra ngoài" }, { char: "大概", pinyin: "dàgài", viet: "Khoảng" }, { char: "有時候", pinyin: "yǒushíhou", viet: "Có lúc" }, { char: "多久", pinyin: "duō jiǔ", viet: "Bao lâu" }, { char: "女", pinyin: "nǚ", viet: "Nữ" }, { char: "月", pinyin: "yuè", viet: "Tháng" }, { char: "號", pinyin: "hào", viet: "Ngày" }, { char: "帶", pinyin: "dài", viet: "Dắt, mang" }, { char: "她", pinyin: "tā", viet: "Cô ấy" }, { char: "還", pinyin: "hái", viet: "Vẫn, còn" }, { char: "建議", pinyin: "jiànyì", viet: "Gợi ý" }, { char: "夜市", pinyin: "yèshì", viet: "Chợ đêm" }, { char: "應該", pinyin: "yīnggāi", viet: "Nên" }, { char: "逛", pinyin: "guàng", viet: "Dạo chơi" }, { char: "特別", pinyin: "tèbié", viet: "Đặc biệt" }, { char: "茶館", pinyin: "cháguǎn", viet: "Quán trà" }, { char: "決定", pinyin: "juédìng", viet: "Quyết định" }, { char: "要是", pinyin: "yàoshi", viet: "Nếu" }, { char: "就", pinyin: "jiù", viet: "Thì, liền" }
-        ],
-        grammar: [{ title: "Phân biệt Thời điểm và Thời đoạn", content: "<b>Thời điểm (time-when)</b> là mốc thời gian. <b>Thời đoạn (time-duration)</b> là khoảng thời gian." }, { title: "Cấu trúc ...的時候 (de shíhou)", content: "'Khi...'. (Ví dụ: 放假的時候)." }, { title: "Cấu trúc 有時候...有時候...", content: "Lúc thì... lúc thì..." }, { title: "Câu điều kiện 要是...就...", content: "Nếu...thì..." }
-        ]
-    },
-    {
-        id: 10,
-        title: "Bài 10: 臺灣的水果很好吃",
-        vocab: [{ char: "水果", pinyin: "shuǐguǒ", viet: "Trái cây" }, { char: "黃色", pinyin: "huángsè", viet: "Màu vàng" }, { char: "芒果", pinyin: "mángguǒ", viet: "Xoài" }, { char: "給", pinyin: "gěi", viet: "Cho" }, { char: "塊", pinyin: "kuài", viet: "Miếng" }, { char: "香", pinyin: "xiāng", viet: "Thơm" }, { char: "甜", pinyin: "tián", viet: "Ngọt" }, { char: "紅色", pinyin: "hóngsè", viet: "Màu đỏ" }, { char: "西瓜", pinyin: "xīguā", viet: "Dưa hấu" }, { char: "吧", pinyin: "ba", viet: "(Trợ từ phỏng đoán)" }, { char: "對", pinyin: "duì", viet: "Đúng" }, { char: "以前", pinyin: "yǐqián", viet: "Trước đây" }, { char: "機會", pinyin: "jīhuì", viet: "Cơ hội" }, { char: "請", pinyin: "qǐng", viet: "Mời (ăn/uống)" }, { char: "拍", pinyin: "pāi", viet: "Chụp (ảnh)" }, { char: "笑", pinyin: "xiào", viet: "Cười" }, { char: "開心", pinyin: "kāixīn", viet: "Vui vẻ" }, { char: "穿", pinyin: "chuān", viet: "Mặc" }, { char: "衣服", pinyin: "yīfu", viet: "Quần áo" }, { char: "旅館", pinyin: "lǚguǎn", viet: "Khách sạn" }, { char: "太太", pinyin: "tàitai", viet: "Vợ" }, { char: "男", pinyin: "nán", viet: "Nam" }, { char: "矮", pinyin: "ǎi", viet: "Thấp" }, { char: "高", pinyin: "gāo", viet: "Cao" }, { char: "弟弟", pinyin: "dìdi", viet: "Em trai" }, { char: "乾淨", pinyin: "gānjìng", viet: "Sạch sẽ" }, { char: "窗戶", pinyin: "chuānghu", viet: "Cửa sổ" }, { char: "往", pinyin: "wǎng", viet: "Hướng về" }, { char: "藍色", pinyin: "lánsè", viet: "Màu xanh lam" }, { char: "因為", pinyin: "yīnwèi", viet: "Bởi vì" }, { char: "住", pinyin: "zhù", viet: "Sống, ở" }
-        ],
-        grammar: [{ title: "Lặp lại động từ + 看 (VVkàn)", content: "Thử làm gì đó xem sao. (Ví dụ: 吃吃看)." }, { title: "Lặp lại tính từ (AA的)", content: "Nhấn mạnh tính chất. (Ví dụ: 香香的)." }, { title: "Mệnh đề làm định ngữ", content: "Cấu trúc: <b>Mệnh đề + 的 + Danh từ</b>. (Ví dụ: 你說的水果)." }, { title: "Trợ từ 了 (le) cuối câu", content: "Biểu thị sự thay đổi tình huống. (Ví dụ: 我現在很喜歡了)." }, { title: "Câu 因為...所以...", content: "Bởi vì... cho nên..." }
-        ]
-    },
-    {
-        id: 11,
-        title: "Bài 11: 我要租房子",
-        vocab: [{ char: "租", pinyin: "zū", viet: "Thuê" }, { char: "房東", pinyin: "fángdōng", viet: "Chủ nhà" }, { char: "客廳", pinyin: "kètīng", viet: "Phòng khách" }, { char: "廚房", pinyin: "chúfáng", viet: "Nhà bếp" }, { char: "左邊", pinyin: "zuǒbiān", viet: "Bên trái" }, { char: "右邊", pinyin: "yòubiān", viet: "Bên phải" }, { char: "浴室", pinyin: "yùshì", viet: "Phòng tắm" }, { char: "超市", pinyin: "chāoshì", viet: "Siêu thị" }, { char: "走路", pinyin: "zǒulù", viet: "Đi bộ" }, { char: "分鐘", pinyin: "fēnzhōng", viet: "Phút" }, { char: "到", pinyin: "dào", viet: "Đến" }, { char: "間", pinyin: "jiān", viet: "Gian (phòng)" }, { char: "空", pinyin: "kōng", viet: "Trống" }, { char: "房間", pinyin: "fángjiān", viet: "Căn phòng" }, { char: "套房", pinyin: "tàofáng", viet: "Phòng khép kín" }, { char: "回去", pinyin: "huíqù", viet: "Đi về" }, { char: "再", pinyin: "zài", viet: "Sau đó" }, { char: "電話", pinyin: "diànhuà", viet: "Điện thoại" }, { char: "喂", pinyin: "wéi", viet: "A lô" }, { char: "房租", pinyin: "fángzū", viet: "Tiền thuê nhà" }, { char: "已經", pinyin: "yǐjīng", viet: "Đã" }, { char: "習慣", pinyin: "xíguàn", viet: "Quen" }, { char: "問題", pinyin: "wèntí", viet: "Vấn đề" }, { char: "熱水器", pinyin: "rèshuǐqì", viet: "Bình nóng lạnh" }, { char: "好像", pinyin: "hǎoxiàng", viet: "Hình như" }, { char: "會", pinyin: "huì", viet: "Sẽ" }, { char: "等", pinyin: "děng", viet: "Đợi" }, { char: "那", pinyin: "nà", viet: "Vậy thì" }, { char: "裝", pinyin: "zhuāng", viet: "Lắp đặt" }, { char: "不過", pinyin: "búguò", viet: "Nhưng" }, { char: "付", pinyin: "fù", viet: "Trả tiền" }
-        ],
-        grammar: [{ title: "Đến để làm gì với 來 (lái)", content: "Cấu trúc: <b>來 + Động từ</b>. (Ví dụ: 我來看房子)." }, { title: "就 (jiù) - Sớm hơn dự kiến", content: "(Ví dụ: 走路五分鐘就到了)." }, { title: "Câu tồn tại với chủ ngữ bất định", content: "Cấu trúc: <b>有 + Danh từ bất định + Động từ</b>. (Ví dụ: 有人住嗎？)." }, { title: "Các loại 會 (huì)", content: "<b>huì_1</b> (kỹ năng), <b>huì_2</b> (sẽ xảy ra)." }, { title: "Lược bỏ danh từ", content: "Danh từ đã rõ trong ngữ cảnh có thể được lược bỏ." }
-        ]
-    },
-    {
-        id: 12,
-        title: "Bài 12: 你在臺灣學多久的中文？",
-        vocab: [{ char: "計畫", pinyin: "jìhuà", viet: "Kế hoạch" }, { char: "年", pinyin: "nián", viet: "Năm" }, { char: "久", pinyin: "jiǔ", viet: "Lâu" }, { char: "時間", pinyin: "shíjiān", viet: "Thời gian" }, { char: "先", pinyin: "xiān", viet: "Trước" }, { char: "念", pinyin: "niàn", viet: "Học, đọc" }, { char: "大學", pinyin: "dàxué", viet: "Đại học" }, { char: "需要", pinyin: "xūyào", viet: "Cần" }, { char: "花", pinyin: "huā", viet: "Tiêu tốn" }, { char: "獎學金", pinyin: "jiǎngxuéjīn", viet: "Học bổng" }, { char: "成績", pinyin: "chéngjì", viet: "Thành tích" }, { char: "學費", pinyin: "xuéfèi", viet: "Học phí" }, { char: "公司", pinyin: "gōngsī", viet: "Công ty" }, { char: "替", pinyin: "tì", viet: "Thay, cho" }, { char: "希望", pinyin: "xīwàng", viet: "Hy vọng" }, { char: "以後", pinyin: "yǐhòu", viet: "Sau này" }, { char: "上班", pinyin: "shàngbān", viet: "Đi làm" }, { char: "念書", pinyin: "niànshū", viet: "Học bài" }, { char: "累", pinyin: "lèi", viet: "Mệt" }, { char: "工作", pinyin: "gōngzuò", viet: "Công việc" }, { char: "去年", pinyin: "qùnián", viet: "Năm ngoái" }, { char: "做", pinyin: "zuò", viet: "Làm" }, { char: "生意", pinyin: "shēngyì", viet: "Kinh doanh" }, { char: "好", pinyin: "hǎo", viet: "Dễ" }, { char: "難", pinyin: "nán", viet: "Khó" }, { char: "這樣", pinyin: "zhèyàng", viet: "Như thế này" }, { char: "國家", pinyin: "guójiā", viet: "Đất nước" }, { char: "試", pinyin: "shì", viet: "Thử" }
-        ],
-        grammar: [{ title: "Cấu trúc 先...再... (xiān...zài...)", content: "Trước tiên...sau đó..." }, { title: "Nhấn mạnh với 是...的 (shì...de)", content: "Dùng để nhấn mạnh thành phần của hành động đã xảy ra trong quá khứ." }, { title: "以後 (yǐhòu)", content: "Sau này, sau khi." }, { title: "Nghĩa đặc biệt của 好/難 + Động từ", content: "<b>好</b> là dễ, <b>難</b> là khó. (Ví dụ: 中文不好學)." }
-        ]
-    },
-    {
-        id: 13,
-        title: "Bài 13: 生日快樂",
-        vocab: [{ char: "生日", pinyin: "shēngrì", viet: "Sinh nhật" }, { char: "快樂", pinyin: "kuàilè", viet: "Vui vẻ" }, { char: "回來", pinyin: "huílái", viet: "Quay về" }, { char: "啊", pinyin: "a", viet: "(Thán từ)" }, { char: "怎麼", pinyin: "zěnme", viet: "Sao lại" }, { char: "忘了", pinyin: "wàngle", viet: "Quên rồi" }, { char: "記得", pinyin: "jìde", viet: "Nhớ" }, { char: "當然", pinyin: "dāngrán", viet: "Đương nhiên" }, { char: "語言", pinyin: "yǔyán", viet: "Ngôn ngữ" }, { char: "交換", pinyin: "jiāohuàn", viet: "Trao đổi" }, { char: "那麼", pinyin: "nàme", viet: "Như vậy" }, { char: "熱心", pinyin: "rèxīn", viet: "Nhiệt tình" }, { char: "西班牙文", pinyin: "Xībānyáwén", viet: "Tiếng TBN" }, { char: "一樣", pinyin: "yíyàng", viet: "Giống nhau" }, { char: "過", pinyin: "guò", viet: "Đón (sinh nhật)" }, { char: "左右", pinyin: "zuǒyòu", viet: "Khoảng" }, { char: "門口", pinyin: "ménkǒu", viet: "Cổng" }, { char: "禮物", pinyin: "lǐwù", viet: "Quà" }, { char: "今年", pinyin: "jīnnián", viet: "Năm nay" }, { char: "訂", pinyin: "dìng", viet: "Đặt trước" }, { char: "了", pinyin: "le", viet: "(Động thái từ)" }, { char: "豬腳麵線", pinyin: "zhūjiǎo miànxiàn", viet: "Mì sợi heo" }, { char: "蛋", pinyin: "dàn", viet: "Trứng" }, { char: "一點", pinyin: "yìdiǎn", viet: "Một chút" }, { char: "傳統", pinyin: "chuántǒng", viet: "Truyền thống" }, { char: "年輕", pinyin: "niánqīng", viet: "Trẻ" }, { char: "蛋糕", pinyin: "dàngāo", viet: "Bánh ngọt" }, { char: "對", pinyin: "duì", viet: "Đối với" }, { char: "祝", pinyin: "zhù", viet: "Chúc" }
-        ],
-        grammar: [{ title: "Cấu trúc 一...就... (yī...jiù...)", content: "Hễ...là..." }, { title: "Động thái từ 了 (le)", content: "Biểu thị hành động đã hoàn thành." }, { title: "Phân biệt phủ định 不 và 沒", content: "<b>不</b> dùng cho hiện tại/tương lai; <b>沒</b> dùng cho quá khứ và phủ định của <b>有</b>." }, { title: "Câu bao hàm với từ nghi vấn", content: "Cấu trúc: <b>Từ nghi vấn + 都/也</b>. (Ví dụ: 我什麼都吃)." }, { title: "多/少 + Động từ", content: "Làm gì đó nhiều hơn/ít hơn." }, { title: "是不是 (shì bú shì)", content: "Dùng để xác nhận thông tin." }, { title: "So sánh với 跟...一樣...", content: "Cấu trúc: <b>A 跟 B 一樣 (+ tính từ)</b>." }
-        ]
-    },
-    {
-        id: 14,
-        title: "Bài 14: 天氣這麼冷！",
-        vocab: [{ char: "天氣", pinyin: "tiānqì", viet: "Thời tiết" }, { char: "冷", pinyin: "lěng", viet: "Lạnh" }, { char: "風", pinyin: "fēng", viet: "Gió" }, { char: "滑雪", pinyin: "huáxuě", viet: "Trượt tuyết" }, { char: "春天", pinyin: "chūntiān", viet: "Mùa xuân" }, { char: "想", pinyin: "xiǎng", viet: "Nhớ" }, { char: "新年", pinyin: "xīnnián", viet: "Năm mới" }, { char: "快", pinyin: "kuài", viet: "Sắp" }, { char: "父母", pinyin: "fùmǔ", viet: "Bố mẹ" }, { char: "冬天", pinyin: "dōngtiān", viet: "Mùa đông" }, { char: "明年", pinyin: "míngnián", viet: "Năm sau" }, { char: "秋天", pinyin: "qiūtiān", viet: "Mùa thu" }, { char: "紅葉", pinyin: "hóngyè", viet: "Lá đỏ" }, { char: "只", pinyin: "zhǐ", viet: "Chỉ" }, { char: "下雪", pinyin: "xiàxuě", viet: "Tuyết rơi" }, { char: "雨", pinyin: "yǔ", viet: "Mưa" }, { char: "傘", pinyin: "sǎn", viet: "Ô, dù" }, { char: "颱風", pinyin: "táifēng", viet: "Bão" }, { char: "要", pinyin: "yào", viet: "Sẽ" }, { char: "夏天", pinyin: "xiàtiān", viet: "Mùa hè" }, { char: "濕", pinyin: "shī", viet: "Ẩm ướt" }, { char: "討厭", pinyin: "tǎoyàn", viet: "Ghét" }, { char: "新聞", pinyin: "xīnwén", viet: "Tin tức" }, { char: "更", pinyin: "gèng", viet: "Càng" }, { char: "大家", pinyin: "dàjiā", viet: "Mọi người" }, { char: "小心", pinyin: "xiǎoxīn", viet: "Cẩn thận" }, { char: "可怕", pinyin: "kěpà", viet: "Đáng sợ" }, { char: "停", pinyin: "tíng", viet: "Dừng" }
-        ],
-        grammar: [{ title: "Thời đoạn sau Động từ + 了", content: "Biểu thị thời gian kéo dài của hành động đã hoàn thành." }, { title: "Cấu trúc '了' kép", content: "Cấu trúc: <b>V + 了 + Thời đoạn + 了</b>, biểu thị hành động đã và đang tiếp diễn." }, { title: "Cấu trúc 快...了 (kuài...le)", content: "Sắp...rồi." }, { title: "So sánh với 更 (gèng)", content: "Càng... (Ví dụ: 今天比昨天更冷)." }, { title: "So sánh kém hơn với 沒有", content: "Cấu trúc: <b>A 沒有 B + Tính từ</b>." }
-        ]
-    },
-    {
-        id: 15,
-        title: "Bài 15: 我很不舒服",
-        vocab: [{ char: "醫生", pinyin: "yīshēng", viet: "Bác sĩ" }, { char: "一直", pinyin: "yìzhí", viet: "Liên tục" }, { char: "流", pinyin: "liú", viet: "Chảy" }, { char: "鼻水", pinyin: "bíshuǐ", viet: "Nước mũi" }, { char: "頭", pinyin: "tóu", viet: "Đầu" }, { char: "痛", pinyin: "tòng", viet: "Đau" }, { char: "胃口", pinyin: "wèikǒu", viet: "Khẩu vị" }, { char: "差", pinyin: "chà", viet: "Kém" }, { char: "喉嚨", pinyin: "hóulóng", viet: "Họng" }, { char: "發炎", pinyin: "fāyán", viet: "Viêm" }, { char: "生病", pinyin: "shēngbìng", viet: "Bị bệnh" }, { char: "發燒", pinyin: "fāshāo", viet: "Sốt" }, { char: "感冒", pinyin: "gǎnmào", viet: "Cảm cúm" }, { char: "藥", pinyin: "yào", viet: "Thuốc" }, { char: "藥局", pinyin: "yàojú", viet: "Hiệu thuốc" }, { char: "拿", pinyin: "ná", viet: "Lấy" }, { char: "把", pinyin: "bǎ", viet: "(Câu chữ 把)" }, { char: "水", pinyin: "shuǐ", viet: "Nước" }, { char: "休息", pinyin: "xiūxi", viet: "Nghỉ ngơi" }, { char: "睡覺", pinyin: "shuìjiào", viet: "Ngủ" }, { char: "臉色", pinyin: "liǎnsè", viet: "Sắc mặt" }, { char: "難看", pinyin: "nánkàn", viet: "Khó coi" }, { char: "肚子", pinyin: "dùzi", viet: "Bụng" }, { char: "吐", pinyin: "tù", viet: "Nôn" }, { char: "次", pinyin: "cì", viet: "Lần" }, { char: "陪", pinyin: "péi", viet: "Đi cùng" }, { char: "看病", pinyin: "kànbìng", viet: "Khám bệnh" }, { char: "健康", pinyin: "jiànkāng", viet: "Sức khỏe" }, { char: "保險", pinyin: "bǎoxiǎn", viet: "Bảo hiểm" }, { char: "油", pinyin: "yóu", viet: "Dầu mỡ" }, { char: "冰", pinyin: "bīng", viet: "Lạnh, đá" }, { char: "別", pinyin: "bié", viet: "Đừng" }, { char: "關心", pinyin: "guānxīn", viet: "Quan tâm" }, { char: "包", pinyin: "bāo", viet: "Gói" }, { char: "睡", pinyin: "shuì", viet: "Ngủ" }, { char: "小時", pinyin: "xiǎoshí", viet: "Giờ đồng hồ" }
-        ],
-        grammar: [{ title: "Câu biểu thị thái độ không chắc chắn", content: "Dùng từ nghi vấn trong câu trần thuật phủ định." }, { title: "Câu chữ 把 (bǎ)", content: "Cấu trúc: <b>Chủ ngữ + 把 + Tân ngữ + Động từ + ...</b>, nhấn mạnh sự xử lý đối với tân ngữ." }, { title: "Cấu trúc V了...就...", content: "Làm xong V rồi thì..." }, { title: "一點 (yìdiǎn)", content: "Một chút (nhiều cách dùng)." }, { title: "So sánh hành động với bổ ngữ 得", content: "Cấu trúc: <b>Động từ + 得 + 比 + Đối tượng + Tính từ</b>." }, { title: "Động từ ly hợp", content: "Các động từ có cấu trúc <b>Động-Tân</b> có thể tách ra." }
-        ]
-    }
-];
+        // Loading state management
+        let scriptsLoaded = {
+            data: false,
+            dashboard: false,
+            lessons: false,
+            notebook: false,
+            app: false
+        };
+        
+        function checkAllScriptsLoaded() {
+            const allLoaded = Object.values(scriptsLoaded).every(loaded => loaded);
+            if (allLoaded && typeof ChineseApp !== 'undefined') {
+                console.log('All scripts loaded, initializing app...');
+                try {
+                    window.app = new ChineseApp();
+                    console.log('App initialized successfully!');
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                    const mainContent = document.getElementById('main-content');
+                    if (mainContent) {
+                        mainContent.innerHTML = `
+                            <div class="text-center text-red-500">
+                                <h2 class="text-xl font-bold">Lỗi khởi tạo ứng dụng</h2>
+                                <p>Vui lòng refresh trang hoặc kiểm tra console để biết thêm chi tiết.</p>
+                                <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Refresh</button>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }
+        
+        // Wait for DOM to be ready
         document.addEventListener('DOMContentLoaded', function() {
-            const mainContent = document.getElementById('main-content');
-            const mobileHeaderTitle = document.getElementById('mobile-header-title');
-            
-            let chart = null;
-            const appState = {
-                currentView: 'dashboard',
-                currentLessonId: null,
-                notebookWords: [],
-                writingPracticeChars: [],
-                currentWritingCharIndex: 0
-            };
-
-            function saveState() {
-                localStorage.setItem('chineseAppNotebook', JSON.stringify(appState.notebookWords));
-            }
-
-            function loadState() {
-                const savedNotebook = localStorage.getItem('chineseAppNotebook');
-                if (savedNotebook) {
-                    try {
-                        appState.notebookWords = JSON.parse(savedNotebook);
-                    } catch(e) {
-                        appState.notebookWords = [];
-                    }
-                }
-            }
-            
-            function init() {
-                loadState();
-                setupEventListeners();
-                renderView(appState.currentView);
-                updateActiveNav(appState.currentView);
-            }
-
-            function setupEventListeners() {
-                document.querySelectorAll('[data-view]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const view = btn.dataset.view;
-                        const title = btn.dataset.title || 'Học Tiếng Trung';
-                        switchView(view);
-                        mobileHeaderTitle.textContent = title;
-                    });
-                });
-            }
-
-            function switchView(view, lessonId = null) {
-                appState.currentView = view;
-                if(lessonId) appState.currentLessonId = lessonId;
-                renderView(view);
-                updateActiveNav(view);
-            }
-            
-            function updateActiveNav(view) {
-                document.querySelectorAll('[data-view]').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.view === view);
-                });
-            }
-
-            function renderView(view) {
-                mainContent.innerHTML = ''; // Clear content
-                switch(view) {
-                    case 'dashboard': renderDashboard(); break;
-                    case 'lessons': renderLessonsList(); break;
-                    case 'lessonDetail': renderLessonDetailView(appState.currentLessonId); break;
-                    case 'notebook': renderNotebook(); break;
-                    case 'writing': renderWritingPractice(); break;
-                    case 'flashcards': renderFlashcardView(appState.currentLessonId); break;
-                    case 'quiz': renderQuizView(appState.currentLessonId); break;
-                }
-            }
-
-            function renderDashboard() {
-                mainContent.innerHTML = `
-                    <div class="space-y-6 md:space-y-8">
-                        <div>
-                            <h2 class="text-3xl font-bold text-stone-800">Bảng điều khiển</h2>
-                            <p class="text-stone-600 mt-1">Chào mừng bạn trở lại!</p>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                             <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
-                                <h3 class="font-semibold text-stone-700 mb-2">Tiến độ học</h3>
-                                <div class="text-4xl font-bold text-accent">${appState.notebookWords.length}</div>
-                                <p class="text-stone-500">từ đã lưu trong sổ tay.</p>
-                             </div>
-                             <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
-                                <h3 class="font-semibold text-stone-700 mb-2">Gợi ý hôm nay</h3>
-                                <button class="w-full bg-accent text-white px-4 py-3 rounded-lg hover:opacity-90 transition font-semibold" onclick="window.app.switchView('writing')">
-                                    Luyện viết ngay!
-                                </button>
-                            </div>
-                        </div>
-                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
-                             <h3 class="text-xl font-semibold mb-4 text-stone-700">Lượng từ vựng mỗi bài</h3>
-                             <div class="relative w-full mx-auto h-64 md:h-80"><canvas id="overview-chart"></canvas></div>
-                        </div>
-                    </div>`;
-                renderOverviewChart();
-            }
-
-            function renderLessonsList() {
-                let listHtml = `<h2 class="text-3xl font-bold text-stone-800 mb-6">Danh sách bài học</h2><div class="space-y-3">`;
-                lessonsData.forEach(lesson => {
-                    listHtml += `
-                        <button onclick="window.app.switchView('lessonDetail', ${lesson.id})" class="w-full text-left p-4 bg-white rounded-xl shadow-sm border border-stone-200 hover:border-accent hover:shadow-md transition flex justify-between items-center">
-                            <div>
-                                <p class="text-sm font-semibold text-accent">Bài ${lesson.id}</p>
-                                <h3 class="text-lg font-bold text-stone-800">${lesson.title.split(':')[1].trim()}</h3>
-                            </div>
-                            <span class="text-2xl text-stone-400">›</span>
-                        </button>`;
-                });
-                listHtml += `</div>`;
-                mainContent.innerHTML = listHtml;
-            }
-
-            function renderLessonDetailView(lessonId) {
-                const lesson = lessonsData.find(l => l.id === lessonId);
-                if (!lesson) { switchView('lessons'); return; }
-                mainContent.innerHTML = `
-                    <div class="flex items-center mb-6">
-                         <button onclick="window.app.switchView('lessons')" class="mr-2 p-2 rounded-full hover:bg-stone-200 transition">‹</button>
-                         <h2 class="text-2xl md:text-3xl font-bold text-stone-800">${lesson.title}</h2>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <button onclick="window.app.switchView('flashcards', ${lesson.id})" class="bg-white p-4 rounded-xl shadow-sm border text-left hover:border-accent transition">
-                            <h4 class="font-semibold text-stone-800 flex items-center gap-2"><span class="text-2xl">🎴</span>Ôn tập Flashcard</h4>
-                            <p class="text-sm text-stone-600">Luyện tập từ vựng của bài này.</p>
-                        </button>
-                        <button onclick="window.app.switchView('quiz', ${lesson.id})" class="bg-white p-4 rounded-xl shadow-sm border text-left hover:border-accent transition">
-                            <h4 class="font-semibold text-stone-800 flex items-center gap-2"><span class="text-2xl">✏️</span>Làm bài kiểm tra</h4>
-                            <p class="text-sm text-stone-600">Kiểm tra kiến thức của bài này.</p>
-                        </button>
-                    </div>
-                    <div class="mb-6"><div class="border-b border-stone-200"><nav class="-mb-px flex space-x-8" aria-label="Tabs"><button id="tab-vocab" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-accent text-accent">Từ vựng</button><button id="tab-grammar" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300">Ngữ pháp</button></nav></div></div>
-                    <div id="vocab-content"></div><div id="grammar-content" class="hidden"></div>`;
-                
-                renderVocabulary(lesson);
-                renderGrammar(lesson.grammar);
-                setupTabs();
-            }
-
-            function renderVocabulary(lesson) {
-                const vocabContainer = mainContent.querySelector('#vocab-content');
-                let gridHtml = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
-                lesson.vocab.forEach(word => {
-                    const isSaved = appState.notebookWords.some(w => w.char === word.char && w.lessonId === lesson.id);
-                    gridHtml += `
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200 flex justify-between items-start">
-                            <div>
-                                <p class="text-2xl font-bold text-stone-800">${word.char}</p>
-                                <p class="text-stone-500">${word.pinyin}</p>
-                                <p class="mt-1 text-stone-600">${word.viet}</p>
-                            </div>
-                            <div class="flex flex-col items-center gap-2">
-                                <button class="play-audio-btn text-xl text-stone-400 hover:text-accent transition" data-char="${word.char}">🔊</button>
-                                <button class="save-word-btn text-xl ${isSaved ? 'text-yellow-500' : 'text-stone-300'} hover:text-yellow-400 transition" data-word='${JSON.stringify({...word, lessonId: lesson.id})}'>⭐</button>
-                            </div>
-                        </div>`;
-                });
-                gridHtml += '</div>';
-                vocabContainer.innerHTML = gridHtml;
-                vocabContainer.querySelectorAll('.play-audio-btn').forEach(btn => btn.addEventListener('click', (e) => playAudio(e.currentTarget.dataset.char)));
-                vocabContainer.querySelectorAll('.save-word-btn').forEach(btn => btn.addEventListener('click', (e) => toggleNotebookWord(e.currentTarget)));
-            }
-            
-            function renderGrammar(grammarList) {
-                const container = mainContent.querySelector('#grammar-content');
-                let html = '<div class="space-y-4">';
-                grammarList.forEach((rule) => {
-                    html += `<div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden"><button class="accordion-toggle w-full text-left p-4 flex justify-between items-center hover:bg-stone-50 transition"><h4 class="text-lg font-semibold text-stone-800">${rule.title}</h4><span class="transform transition-transform duration-300 text-stone-500">▼</span></button><div class="accordion-content px-4 pb-4 text-stone-600 leading-relaxed text-base">${rule.content}</div></div>`;
-                });
-                html += '</div>';
-                container.innerHTML = html;
-                setupAccordions();
-            }
-
-            function renderFlashcardView(lessonId) {
-                const lesson = lessonsData.find(l => l.id === lessonId);
-                if (!lesson) { switchView('lessons'); return; }
-                mainContent.innerHTML = `
-                    <div class="flex items-center mb-6">
-                        <button onclick="window.app.switchView('lessonDetail', ${lessonId})" class="mr-2 p-2 rounded-full hover:bg-stone-200 transition">‹</button>
-                        <h2 class="text-2xl md:text-3xl font-bold text-stone-800">Flashcards: ${lesson.title.split(':')[1].trim()}</h2>
-                    </div>
-                    <div id="flashcard-main">
-                        <div class="flashcard-container max-w-lg mx-auto">
-                            <div id="flashcard" class="flashcard"><div class="flashcard-face flashcard-front" id="flashcard-front"></div><div class="flashcard-face flashcard-back" id="flashcard-back"></div></div>
-                        </div>
-                        <div class="flex justify-between items-center mt-6 max-w-lg mx-auto">
-                            <button id="prev-card" class="px-4 py-2 bg-white border border-stone-300 rounded-lg shadow-sm hover:bg-stone-100 transition">⬅️ Từ trước</button>
-                            <p id="card-counter" class="text-stone-600 font-medium"></p>
-                            <button id="next-card" class="px-4 py-2 bg-white border border-stone-300 rounded-lg shadow-sm hover:bg-stone-100 transition">Từ sau ➡️</button>
-                        </div>
-                    </div>`;
-
-                const vocab = lesson.vocab;
-                let currentIndex = 0;
-                const card = mainContent.querySelector('#flashcard');
-                const front = mainContent.querySelector('#flashcard-front');
-                const back = mainContent.querySelector('#flashcard-back');
-                const counter = mainContent.querySelector('#card-counter');
-                
-                function updateCard() {
-                    card.classList.remove('is-flipped');
-                    setTimeout(() => {
-                        const word = vocab[currentIndex];
-                        front.innerHTML = `<div class="flex flex-col items-center"><p class="text-5xl font-extrabold text-stone-800">${word.char}</p><p class="mt-2 text-stone-500">${word.pinyin}</p></div>`;
-                        back.innerHTML = `<p class="text-3xl font-bold">${word.viet}</p>`;
-                        counter.textContent = `${currentIndex + 1} / ${vocab.length}`;
-                    }, 200);
-                }
-
-                card.onclick = () => card.classList.toggle('is-flipped');
-                mainContent.querySelector('#prev-card').onclick = () => { currentIndex = (currentIndex - 1 + vocab.length) % vocab.length; updateCard(); };
-                mainContent.querySelector('#next-card').onclick = () => { currentIndex = (currentIndex + 1) % vocab.length; updateCard(); };
-                updateCard();
-            }
-
-            function renderQuizView(lessonId) {
-                const lesson = lessonsData.find(l => l.id === lessonId);
-                if (!lesson) { switchView('lessons'); return; }
-                mainContent.innerHTML = `
-                    <div class="flex items-center mb-6">
-                        <button onclick="window.app.switchView('lessonDetail', ${lessonId})" class="mr-2 p-2 rounded-full hover:bg-stone-200 transition">‹</button>
-                        <h2 class="text-2xl md:text-3xl font-bold text-stone-800">Kiểm tra: ${lesson.title.split(':')[1].trim()}</h2>
-                    </div>
-                    <div id="quiz-main" class="max-w-2xl mx-auto"></div>`;
-
-                const quizContainer = mainContent.querySelector('#quiz-main');
-                const vocab = [...lesson.vocab];
-                const questions = [];
-                const numQuestions = Math.min(10, vocab.length);
-                let currentQuestionIndex = 0;
-                let score = 0;
-
-                const shuffledVocab = vocab.sort(() => 0.5 - Math.random());
-                for (let i = 0; i < numQuestions; i++) {
-                    const questionVocab = shuffledVocab[i];
-                    let options = [{ text: questionVocab.viet, correct: true }];
-                    let otherOptions = lesson.vocab.filter(v => v.char !== questionVocab.char).sort(() => 0.5 - Math.random());
-                    for (let j = 0; j < 3 && j < otherOptions.length; j++) {
-                        options.push({ text: otherOptions[j].viet, correct: false });
-                    }
-                    questions.push({ char: questionVocab.char, pinyin: questionVocab.pinyin, options: options.sort(() => 0.5 - Math.random()) });
-                }
-
-                function renderQuestion() {
-                    if (currentQuestionIndex >= questions.length) { renderQuizResult(); return; }
-                    const q = questions[currentQuestionIndex];
-                    let optionsHtml = '';
-                    q.options.forEach(opt => { optionsHtml += `<button class="quiz-option block w-full text-left p-4 border-2 border-stone-200 rounded-lg mb-3 transition" data-correct="${opt.correct}">${opt.text}</button>`; });
-                    quizContainer.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-md"><div class="flex justify-between items-baseline mb-4"><p class="text-stone-600 font-semibold">Câu ${currentQuestionIndex + 1}/${questions.length}</p><p class="text-stone-500">Điểm: ${score}</p></div><div class="text-center mb-6 bg-stone-100 p-8 rounded-lg"><p class="text-6xl font-extrabold text-stone-800">${q.char}</p><p class="text-xl text-stone-500 mt-2">${q.pinyin}</p></div><div id="options-container">${optionsHtml}</div></div>`;
-                    quizContainer.querySelectorAll('.quiz-option').forEach(btn => btn.onclick = (e) => checkAnswer(e.target));
-                }
-
-                function checkAnswer(selectedBtn) {
-                    quizContainer.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true);
-                    if (selectedBtn.dataset.correct === 'true') { score++; selectedBtn.classList.add('correct'); } else { selectedBtn.classList.add('incorrect'); quizContainer.querySelector('[data-correct="true"]').classList.add('correct'); }
-                    setTimeout(() => { currentQuestionIndex++; renderQuestion(); }, 1500);
-                }
-
-                function renderQuizResult() {
-                    quizContainer.innerHTML = `<div class="bg-white p-8 rounded-xl shadow-md text-center"><h3 class="text-2xl font-bold mb-2">Hoàn thành!</h3><p class="text-lg text-stone-600 mb-6">Điểm số của bạn: <span class="font-bold text-accent text-2xl">${score}/${questions.length}</span></p><button class="px-6 py-2 bg-accent text-white font-semibold rounded-lg hover:opacity-90 transition" onclick="window.app.renderQuizView(${lessonId})">Làm lại</button><button class="ml-4 px-6 py-2 bg-stone-200 text-stone-800 font-semibold rounded-lg hover:bg-stone-300 transition" onclick="window.app.switchView('lessonDetail', ${lessonId})">Quay lại bài học</button></div>`;
-                }
-                renderQuestion();
-            }
-            
-            function setupTabs() {
-                const tabs = mainContent.querySelectorAll('.tab-btn');
-                const vocabContent = mainContent.querySelector('#vocab-content');
-                const grammarContent = mainContent.querySelector('#grammar-content');
-                if(!tabs.length) return;
-                
-                tabs.forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        tabs.forEach(t => {
-                            t.classList.remove('border-accent', 'text-accent');
-                            t.classList.add('border-transparent', 'text-stone-500');
-                        });
-                        tab.classList.add('border-accent', 'text-accent');
-                        tab.classList.remove('border-transparent', 'text-stone-500');
-
-                        if (tab.id === 'tab-vocab') {
-                            vocabContent.classList.remove('hidden');
-                            grammarContent.classList.add('hidden');
-                        } else {
-                            vocabContent.classList.add('hidden');
-                            grammarContent.classList.remove('hidden');
-                        }
-                    });
-                });
-            }
-            
-            function setupAccordions() {
-                mainContent.querySelectorAll('.accordion-toggle').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const content = button.nextElementSibling;
-                        const icon = button.querySelector('span');
-                        if (content.style.maxHeight) {
-                            content.style.maxHeight = null;
-                            icon.style.transform = 'rotate(0deg)';
-                        } else {
-                            content.style.maxHeight = content.scrollHeight + "px";
-                            icon.style.transform = 'rotate(180deg)';
-                        }
-                    });
-                });
-            }
-
-            function toggleNotebookWord(button, fromNotebook = false) {
-                const wordData = JSON.parse(button.dataset.word);
-                const index = appState.notebookWords.findIndex(w => w.char === wordData.char && w.lessonId === wordData.lessonId);
-                if (index > -1) {
-                    appState.notebookWords.splice(index, 1);
-                    button.classList.remove('text-yellow-500');
-                    button.classList.add('text-stone-300');
-                } else {
-                    appState.notebookWords.push(wordData);
-                    button.classList.add('text-yellow-500');
-                    button.classList.remove('text-stone-300');
-                }
-                saveState();
-                if (fromNotebook) renderNotebook();
-            }
-
-            function renderNotebook() {
-                let contentHtml = `<h2 class="text-3xl font-bold text-stone-800 mb-6">Sổ tay từ vựng</h2>`;
-                if (appState.notebookWords.length === 0) {
-                    contentHtml += `<div class="bg-white p-6 rounded-xl text-center text-stone-500 shadow-sm border"><p>Sổ tay của bạn đang trống.</p><p class="text-sm mt-2">Nhấn vào ngôi sao ⭐ bên cạnh từ vựng để lưu lại đây.</p></div>`;
-                } else {
-                    contentHtml += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
-                    appState.notebookWords.forEach(word => {
-                        contentHtml += `
-                            <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200 flex justify-between items-start">
-                                <div>
-                                    <p class="text-xs text-stone-400">Bài ${word.lessonId}</p>
-                                    <p class="text-2xl font-bold text-stone-800">${word.char}</p>
-                                    <p class="text-stone-500">${word.pinyin}</p>
-                                    <p class="mt-1 text-stone-600">${word.viet}</p>
-                                </div>
-                                <div class="flex flex-col items-center gap-2">
-                                     <button class="play-audio-btn text-xl text-stone-400 hover:text-accent transition" data-char="${word.char}">🔊</button>
-                                     <button class="save-word-btn text-xl text-yellow-500 hover:text-yellow-400 transition" data-word='${JSON.stringify(word)}'>⭐</button>
-                                </div>
-                            </div>`;
-                    });
-                    contentHtml += '</div>';
-                }
-                mainContent.innerHTML = contentHtml;
-                mainContent.querySelectorAll('.play-audio-btn').forEach(btn => btn.addEventListener('click', (e) => playAudio(e.currentTarget.dataset.char)));
-                mainContent.querySelectorAll('.save-word-btn').forEach(btn => btn.addEventListener('click', (e) => toggleNotebookWord(e.currentTarget, true)));
-            }
-
-            function renderWritingPractice() {
-                mainContent.innerHTML = `
-                    <div class="space-y-6">
-                        <div>
-                            <h2 class="text-3xl font-bold text-stone-800">Luyện viết chữ Hán</h2>
-                            <p class="text-stone-600 mt-1">Dùng chuột hoặc ngón tay để tập viết theo ký tự.</p>
-                        </div>
-                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border">
-                            <div id="writing-char-display" class="text-center mb-4 bg-stone-100 rounded-lg py-8">
-                                <p class="text-8xl font-serif text-stone-800" id="char-to-write"></p>
-                            </div>
-                            <canvas id="writing-canvas" class="w-full bg-stone-50 border-2 border-dashed border-stone-300 rounded-lg cursor-crosshair writing-canvas"></canvas>
-                            <div class="flex justify-center items-center gap-2 sm:gap-4 mt-4 flex-wrap">
-                                <button id="hint-btn" class="px-4 py-2 bg-stone-200 rounded-lg font-semibold hover:bg-stone-300 transition">Gợi ý</button>
-                                <button id="clear-btn" class="px-4 py-2 bg-red-200 text-red-800 rounded-lg font-semibold hover:bg-red-300 transition">Xóa</button>
-                                <button id="next-char-btn" class="px-4 py-2 bg-accent text-white rounded-lg font-semibold hover:opacity-90 transition">Từ tiếp theo</button>
-                            </div>
-                        </div>
-                    </div>`;
-                setupWritingCanvas();
-            }
-
-            function setupWritingCanvas() {
-                if (appState.writingPracticeChars.length === 0) {
-                     appState.writingPracticeChars = lessonsData.flatMap(l => l.vocab.map(v => v.char));
-                     appState.writingPracticeChars = [...new Set(appState.writingPracticeChars)]; // Remove duplicates
-                }
-                
-                const canvas = document.getElementById('writing-canvas');
-                if (!canvas) return;
-                const charDisplay = document.getElementById('char-to-write');
-                const hintBtn = document.getElementById('hint-btn');
-                const clearBtn = document.getElementById('clear-btn');
-                const nextBtn = document.getElementById('next-char-btn');
-                const ctx = canvas.getContext('2d');
-                
-                let isDrawing = false;
-                
-                function setCanvasSize() {
-                    canvas.width = canvas.offsetWidth;
-                    canvas.height = canvas.offsetWidth * 0.75; // Maintain aspect ratio
-                    ctx.strokeStyle = '#292524';
-                    ctx.lineWidth = Math.max(5, canvas.width / 80);
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                }
-                
-                function showNextChar() {
-                    appState.currentWritingCharIndex = Math.floor(Math.random() * appState.writingPracticeChars.length);
-                    charDisplay.textContent = appState.writingPracticeChars[appState.currentWritingCharIndex];
-                    clearCanvas();
-                }
-
-                function clearCanvas() {
-                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
-
-                function showHint() {
-                    clearCanvas();
-                    ctx.save();
-                    ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
-                    ctx.font = `${canvas.height * 0.8}px serif`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(charDisplay.textContent, canvas.width / 2, canvas.height / 2);
-                    ctx.restore();
-                }
-
-                const getPos = (e) => {
-                    const rect = canvas.getBoundingClientRect();
-                    const event = e.touches ? e.touches[0] : e;
-                    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
-                };
-
-                const startDrawing = (e) => { isDrawing = true; draw(e); };
-                const stopDrawing = () => { isDrawing = false; ctx.beginPath(); };
-                const draw = (e) => {
-                    if (!isDrawing) return;
-                    e.preventDefault();
-                    let pos = getPos(e);
-                    ctx.lineTo(pos.x, pos.y);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(pos.x, pos.y);
-                };
-                
-                setCanvasSize();
-                window.addEventListener('resize', setCanvasSize);
-                
-                canvas.addEventListener('mousedown', startDrawing);
-                canvas.addEventListener('mousemove', draw);
-                canvas.addEventListener('mouseup', stopDrawing);
-                canvas.addEventListener('mouseout', stopDrawing);
-                canvas.addEventListener('touchstart', startDrawing, { passive: false });
-                canvas.addEventListener('touchmove', draw, { passive: false });
-                canvas.addEventListener('touchend', stopDrawing);
-
-                clearBtn.addEventListener('click', clearCanvas);
-                nextBtn.addEventListener('click', showNextChar);
-                hintBtn.addEventListener('click', showHint);
-                
-                showNextChar();
-            }
-
-            function playAudio(text) {
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'zh-CN';
-                    utterance.rate = 0.9;
-                    window.speechSynthesis.speak(utterance);
-                }
-            }
-            
-            function renderOverviewChart() {
-                const chartEl = document.getElementById('overview-chart');
-                if(!chartEl) return;
-                const ctx = chartEl.getContext('2d');
-                const vocabCounts = lessonsData.map(lesson => lesson.vocab.length);
-                const lessonLabels = lessonsData.map(lesson => `Bài ${lesson.id}`);
-                if (chart) chart.destroy();
-                chart = new Chart(ctx, { type: 'bar', data: { labels: lessonLabels, datasets: [{ label: 'Số từ vựng', data: vocabCounts, backgroundColor: 'rgba(74, 124, 89, 0.6)', borderColor: 'rgba(74, 124, 89, 1)', borderWidth: 1, borderRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } } });
-            }
-
-            window.app = {
-                switchView,
-                renderQuizView
-            };
-
-            init();
+            checkAllScriptsLoaded();
         });
     </script>
+    
+    <script src="data.js" onload="scriptsLoaded.data = true; checkAllScriptsLoaded();" onerror="console.error('Failed to load data.js')"></script>
+    <script src="renderers/dashboard.js" onload="scriptsLoaded.dashboard = true; checkAllScriptsLoaded();" onerror="console.error('Failed to load dashboard.js')"></script>
+    <script src="renderers/lessons.js" onload="scriptsLoaded.lessons = true; checkAllScriptsLoaded();" onerror="console.error('Failed to load lessons.js')"></script>
+    <script src="renderers/notebook.js" onload="scriptsLoaded.notebook = true; checkAllScriptsLoaded();" onerror="console.error('Failed to load notebook.js')"></script>
+    <script src="app.js" onload="scriptsLoaded.app = true; checkAllScriptsLoaded();" onerror="console.error('Failed to load app.js')"></script>
 </body>
-</html>
+</html> 
