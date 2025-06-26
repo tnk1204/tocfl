@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài học TOCFL</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container lesson-container">
+        
+        <header id="lesson-header" class="lesson-header">
+            <!-- Lesson Title will be inserted by JS -->
+            <h1 id="lesson-title-zh"></h1>
+            <p id="lesson-title-vi"></p>
+        </header>
+
+        <main id="lesson-main-content">
+            
+            <!-- Vocabulary Flashcard Section -->
+            <div id="vocab-section">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <span class="character" id="flashcard-char"></span>
+                        </div>
+                        <div class="flashcard-back">
+                            <p class="pinyin" id="flashcard-pinyin"></p>
+                            <p class="translation" id="flashcard-translation"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lesson-controls">
+                    <button id="show-answer-btn" class="control-btn">Hiện đáp án</button>
+                    <button id="next-btn" class="control-btn">Tiếp theo</button>
+                </div>
+            </div>
+
+            <!-- Grammar Section (initially hidden) -->
+            <div id="grammar-section" class="grammar-section hidden">
+                <!-- Grammar cards will be inserted by JS -->
+            </div>
+
+            <!-- Summary Screen (initially hidden) -->
+            <div id="summary-screen" class="summary-screen hidden">
+                <h2>Hoàn thành!</h2>
+                <p id="summary-text">Bạn đã học xong tất cả từ vựng và ngữ pháp của bài này.</p>
+                <a href="index.html" class="home-btn">Về trang chủ</a>
+            </div>
+
+        </main>
+        
+        <footer>
+             <!-- Maybe a progress indicator here later -->
+        </footer>
+
+    </div>
+
+    <script src="js/lesson.js"></script>
+</body>
+</html> 

@@ -1,46 +1,29 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TOCFL A1 - Học & Ôn luyện</title>
-  <meta name="description" content="Website hỗ trợ học tập, ôn luyện TOCFL A1: từ vựng, ngữ pháp, bài tập, flashcard, kiểm tra, cá nhân hóa.">
-  <link rel="stylesheet" href="css/style.css">
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'GA_MEASUREMENT_ID');
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học TOCFL A1</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <div class="container header-flex">
-      <h1>TOCFL A1</h1>
-      <nav>
-        <a href="#home" class="nav-link">Trang chủ</a>
-        <a href="#vocab" class="nav-link">Từ vựng</a>
-        <a href="#grammar" class="nav-link">Ngữ pháp</a>
-        <a href="#exercise" class="nav-link">Bài tập</a>
-        <a href="#flashcard" class="nav-link">Flashcard</a>
-        <a href="#test" class="nav-link">Kiểm tra</a>
-      </nav>
-    </div>
-  </header>
-  <main id="main-content">
-    <!-- Nội dung động sẽ được JS render -->
-  </main>
-  <footer>
+
     <div class="container">
-      <p>&copy; 2024 TOCFL A1. All rights reserved.</p>
+        <header class="main-header">
+            <h1>TOCFL A1</h1>
+            <p>Chọn một bài học để bắt đầu</p>
+        </header>
+
+        <main>
+            <div id="lesson-list" class="lesson-grid">
+                <!-- Lesson cards will be dynamically inserted here by main.js -->
+            </div>
+        </main>
     </div>
-  </footer>
-  <script src="js/main.js"></script>
-  <script src="js/flashcard.js"></script>
-  <script src="js/quiz.js"></script>
-  <script src="js/progress.js"></script>
-  <script src="js/suggest.js"></script>
+
+    <script src="js/main.js"></script>
 </body>
 </html> 
