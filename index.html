@@ -350,6 +350,7 @@
                     
                     // Visualizações aprimoradas
                     case 'flashcards': renderEnhancedFlashcardView(appState.currentLessonId); break;
+                    case 'srsReview': renderSRSReview(); break;
                     case 'oldFlashcards': renderFlashcardView(appState.currentLessonId); break;
                     case 'quiz': renderQuizView(appState.currentLessonId); break;
                     case 'dailyChallenge': renderDailyChallenge(); break;
@@ -426,11 +427,11 @@
                 // Configurar eventos de botões
                 document.getElementById('start-review-btn').addEventListener('click', () => {
                     if (dueCards.length === 0) {
-                        alert('Não há cartões para revisar hoje!');
+                        alert('Không có thẻ nào cần ôn tập hôm nay!');
                     } else {
-                        // Iniciar sessão de revisão SRS
+                        // Iniciar sessão de revisão SRS - usar bài học đầu tiên để bắt đầu
                         appState.currentSRSReview = dueCards;
-                        switchView('flashcards');
+                        switchView('srsReview');
                     }
                 });
                 
@@ -713,6 +714,17 @@
             // Obter cartões que precisam de revisão hoje
             function getDueCards() {
                 const now = new Date().getTime();
+                
+                // Se não há cartões SRS, criar alguns para test
+                if (appState.srsData.cards.length === 0) {
+                    // Criar cartões SRS para as primeiras palavras de cada bài học
+                    lessonsData.slice(0, 3).forEach(lesson => {
+                        lesson.vocab.slice(0, 2).forEach(word => {
+                            createOrUpdateSRSCard(word, lesson.id);
+                        });
+                    });
+                }
+                
                 return appState.srsData.cards.filter(card => card.nextReview <= now);
             }
             
@@ -859,6 +871,7 @@
                         if (card) {
                             updateSRSCard(card, true);
                             // Aumentar mais um nível para "fácil"
+                            const SRS_INTERVALS = [0, 1, 3, 7, 14, 30, 90, 180];
                             if (card.level < SRS_INTERVALS.length - 1) {
                                 card.level++;
                                 const now = new Date();
@@ -910,6 +923,227 @@
                             <p class="text-stone-600 text-sm">${examples[word.char].translation}</p>`;
                 }
                 return null;
+            }
+            
+            // Configurar modo quiz (placeholder)
+            function setupQuizMode(vocab, sourceId) {
+                console.log('Quiz mode não implementado ainda');
+            }
+            
+            // Configurar modo digitação (placeholder)
+            function setupTypingMode(vocab, sourceId) {
+                console.log('Typing mode não implementado ainda');
+            }
+            
+            // Render SRS Review session
+            function renderSRSReview() {
+                if (!appState.currentSRSReview || appState.currentSRSReview.length === 0) {
+                    switchView('dashboard');
+                    return;
+                }
+                
+                // Tạo danh sách từ vựng từ các thẻ SRS
+                const vocab = appState.currentSRSReview.map(card => ({
+                    char: card.char,
+                    pinyin: card.pinyin,
+                    viet: card.viet,
+                    lessonId: card.lessonId
+                }));
+                
+                const title = "Ôn tập SRS hàng ngày";
+                
+                mainContent.innerHTML = `
+                    <div class="flex items-center mb-6">
+                        <button onclick="window.app.switchView('dashboard')" class="mr-2 p-2 rounded-full hover:bg-stone-200 transition">‹</button>
+                        <h2 class="text-2xl md:text-3xl font-bold text-stone-800">${title}</h2>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow p-4 mb-6">
+                        <div class="mb-4">
+                            <p class="text-stone-600">Số thẻ cần ôn tập: <span class="font-bold text-accent">${vocab.length}</span></p>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm mb-2">
+                            <div>
+                                <span class="font-medium text-accent">Tự động phát âm:</span>
+                                <label class="inline-flex items-center cursor-pointer ml-2">
+                                    <div class="relative">
+                                        <input type="checkbox" id="autoplay-toggle" class="sr-only peer" checked>
+                                        <div class="w-9 h-5 bg-gray-200 rounded-full peer-checked:bg-accent peer"></div>
+                                        <div class="absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition-transform peer-checked:translate-x-4"></div>
+                                    </div>
+                                </label>
+                            </div>
+                            <select id="study-direction" class="px-2 py-1 border rounded text-sm">
+                                <option value="char-to-viet">Hán → Việt</option>
+                                <option value="viet-to-char">Việt → Hán</option>
+                                <option value="pinyin-to-char">Pinyin → Hán</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="flashcard-main">
+                        <div id="flip-mode" class="mb-6">
+                            <div class="flashcard-container max-w-lg mx-auto">
+                                <div id="flashcard" class="flashcard mb-4">
+                                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                                </div>
+                                <div id="example-sentence" class="bg-stone-100 p-3 rounded-lg text-center mb-4 hidden"></div>
+                            </div>
+                            <div class="flex justify-between items-center mt-4 max-w-lg mx-auto">
+                                <button id="prev-card" class="px-4 py-2 bg-white border border-stone-300 rounded-lg shadow-sm hover:bg-stone-100 transition">⬅️ Từ trước</button>
+                                <p id="card-counter" class="text-stone-600 font-medium"></p>
+                                <button id="next-card" class="px-4 py-2 bg-white border border-stone-300 rounded-lg shadow-sm hover:bg-stone-100 transition">Từ sau ➡️</button>
+                            </div>
+                            <div class="flex justify-center gap-3 mt-4 max-w-lg mx-auto">
+                                <button id="mark-hard" class="px-3 py-2 bg-red-200 text-red-800 rounded">Khó</button>
+                                <button id="mark-good" class="px-3 py-2 bg-blue-200 text-blue-800 rounded">Biết</button>
+                                <button id="mark-easy" class="px-3 py-2 bg-green-200 text-green-800 rounded">Dễ</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                setupSRSFlipMode(vocab, appState.currentSRSReview);
+            }
+            
+            // Configurar modo flip para SRS Review
+            function setupSRSFlipMode(vocab, srsCards) {
+                let currentIndex = 0;
+                const card = document.getElementById('flashcard');
+                const front = document.getElementById('flashcard-front');
+                const back = document.getElementById('flashcard-back');
+                const counter = document.getElementById('card-counter');
+                const exampleEl = document.getElementById('example-sentence');
+                
+                function updateCard() {
+                    if (currentIndex >= vocab.length) {
+                        // Finished review session
+                        mainContent.innerHTML = `
+                            <div class="text-center py-12">
+                                <h2 class="text-3xl font-bold text-stone-800 mb-4">🎉 Hoàn thành ôn tập!</h2>
+                                <p class="text-stone-600 mb-6">Bạn đã hoàn thành ${vocab.length} thẻ ôn tập hôm nay.</p>
+                                <button onclick="window.app.switchView('dashboard')" class="px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:opacity-90 transition">
+                                    Quay về trang chủ
+                                </button>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const direction = document.getElementById('study-direction').value;
+                    const autoplay = document.getElementById('autoplay-toggle').checked;
+                    
+                    card.classList.remove('is-flipped');
+                    setTimeout(() => {
+                        const word = vocab[currentIndex];
+                        
+                        // Gerar frase de exemplo
+                        const example = generateExampleSentence(word);
+                        
+                        // Atualizar conteúdo com base na direção
+                        if (direction === 'char-to-viet') {
+                            front.innerHTML = `<div class="flex flex-col items-center">
+                                <p class="text-5xl font-extrabold text-stone-800">${word.char}</p>
+                                <p class="mt-2 text-stone-500">${word.pinyin}</p>
+                            </div>`;
+                            back.innerHTML = `<p class="text-3xl font-bold">${word.viet}</p>`;
+                            
+                            // Reproduzir áudio automaticamente
+                            if (autoplay) {
+                                setTimeout(() => playAudio(word.char), 500);
+                            }
+                        } 
+                        else if (direction === 'viet-to-char') {
+                            front.innerHTML = `<div class="flex flex-col items-center">
+                                <p class="text-3xl font-bold text-stone-800">${word.viet}</p>
+                            </div>`;
+                            back.innerHTML = `<div class="flex flex-col items-center">
+                                <p class="text-5xl font-extrabold">${word.char}</p>
+                                <p class="mt-2">${word.pinyin}</p>
+                            </div>`;
+                        }
+                        else if (direction === 'pinyin-to-char') {
+                            front.innerHTML = `<div class="flex flex-col items-center">
+                                <p class="text-3xl font-bold text-stone-800">${word.pinyin}</p>
+                            </div>`;
+                            back.innerHTML = `<div class="flex flex-col items-center">
+                                <p class="text-5xl font-extrabold">${word.char}</p>
+                                <p class="mt-2">${word.viet}</p>
+                            </div>`;
+                        }
+                        
+                        // Atualizar frase de exemplo
+                        if (example) {
+                            exampleEl.classList.remove('hidden');
+                            exampleEl.innerHTML = example;
+                        } else {
+                            exampleEl.classList.add('hidden');
+                        }
+                        
+                        counter.textContent = `${currentIndex + 1} / ${vocab.length}`;
+                    }, 200);
+                }
+
+                card.onclick = () => {
+                    card.classList.toggle('is-flipped');
+                    // Reproduzir áudio ao virar para frente no modo Viet->Han
+                    if (card.classList.contains('is-flipped') && document.getElementById('study-direction').value === 'viet-to-char') {
+                        setTimeout(() => playAudio(vocab[currentIndex].char), 300);
+                    }
+                };
+                
+                document.getElementById('prev-card').onclick = () => { 
+                    currentIndex = Math.max(0, currentIndex - 1);
+                    updateCard();
+                };
+                
+                document.getElementById('next-card').onclick = () => { 
+                    currentIndex = Math.min(vocab.length - 1, currentIndex + 1);
+                    updateCard();
+                };
+                
+                // Botões SRS
+                document.getElementById('mark-hard').onclick = () => {
+                    const srsCard = srsCards[currentIndex];
+                    if (srsCard) {
+                        updateSRSCard(srsCard, false);
+                    }
+                    currentIndex++;
+                    updateCard();
+                };
+                
+                document.getElementById('mark-good').onclick = () => {
+                    const srsCard = srsCards[currentIndex];
+                    if (srsCard) {
+                        updateSRSCard(srsCard, true);
+                    }
+                    currentIndex++;
+                    updateCard();
+                };
+                
+                document.getElementById('mark-easy').onclick = () => {
+                    const srsCard = srsCards[currentIndex];
+                    if (srsCard) {
+                        updateSRSCard(srsCard, true);
+                        // Aumentar mais um nível para "fácil"
+                        const SRS_INTERVALS = [0, 1, 3, 7, 14, 30, 90, 180];
+                        if (srsCard.level < SRS_INTERVALS.length - 1) {
+                            srsCard.level++;
+                            const now = new Date();
+                            srsCard.nextReview = new Date(now.setDate(now.getDate() + SRS_INTERVALS[srsCard.level])).getTime();
+                            saveState();
+                        }
+                    }
+                    currentIndex++;
+                    updateCard();
+                };
+                
+                // Configurar mudança de direção
+                document.getElementById('study-direction').addEventListener('change', updateCard);
+                
+                updateCard();
             }
 
             function renderQuizView(lessonId) {
@@ -1399,10 +1633,13 @@
                 const word = lesson.vocab.find(w => w.char === char);
                 if (!word) return;
                 
-                renderHanziDetailView(word, lessonId);
+                // Atualizar state e renderizar
+                appState.currentChar = char;
+                appState.currentLessonId = lessonId;
+                switchView('vocabDetail');
             }
             
-            // Aprimorar a visualização da lição para incluir análise de caractere
+            // Renderizar vocabulário padrão (sem análise de caractere)
             function renderVocabulary(lesson) {
                 const vocabContainer = mainContent.querySelector('#vocab-content');
                 let gridHtml = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
@@ -1411,15 +1648,13 @@
                     gridHtml += `
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200 flex justify-between items-start">
                             <div>
-                                <p class="text-2xl font-bold text-stone-800 cursor-pointer hover:text-accent transition" 
-                                   onclick="window.app.showWordDetail('${word.char}', ${lesson.id})">${word.char}</p>
+                                <p class="text-2xl font-bold text-stone-800">${word.char}</p>
                                 <p class="text-stone-500">${word.pinyin}</p>
                                 <p class="mt-1 text-stone-600">${word.viet}</p>
                             </div>
                             <div class="flex flex-col items-center gap-2">
                                 <button class="play-audio-btn text-xl text-stone-400 hover:text-accent transition" data-char="${word.char}">🔊</button>
                                 <button class="save-word-btn text-xl ${isSaved ? 'text-yellow-500' : 'text-stone-300'} hover:text-yellow-400 transition" data-word='${JSON.stringify({...word, lessonId: lesson.id})}'>⭐</button>
-                                <button class="show-detail-btn text-xl text-stone-300 hover:text-accent transition" onclick="window.app.showWordDetail('${word.char}', ${lesson.id})">ℹ️</button>
                             </div>
                         </div>`;
                 });
@@ -1517,6 +1752,15 @@
                 }
             }
 
+            // Funções ainda não implementadas (placeholders)
+            function showCreateDeckDialog() {
+                alert('Função criar deck personalizado ainda não implementada');
+            }
+            
+            function renderCustomDecksView() {
+                console.log('Custom decks view ainda não implementada');
+            }
+            
             // Atualizar app.switchView para incluir novas visualizações
             window.app = {
                 switchView,
